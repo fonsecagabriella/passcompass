@@ -77,3 +77,8 @@ Terraform (not shown) provisions a small CPU VM + object storage bucket.
 CI/CD: GitHub Actions lints, tests, builds the Docker image, and redeploys the FastAPI container on success.
 
 Scalability: everything is stateless; swap the VM for Kubernetes later without code changes.
+
+## The dataset
+[UCI Student Performance](https://archive.ics.uci.edu/dataset/320/student%2Bperformance)
+
+Collected via questionnaires and school reports at two Portuguese secondary schools, this dataset captures socioeconomic, family and study-habit factors alongside three period grades (G1–G3) for 649 students in Mathematics and Portuguese language. It has become a staple benchmark for early-warning systems in education because it is small, tidy and publicly licensed, yet rich enough to test fairness and feature-drift monitoring strategies. They convert the final grade G3 into a binary pass (≥ 10) / fail target to align with real-world intervention workflows.
