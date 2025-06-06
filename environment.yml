@@ -1,0 +1,28 @@
+name: passcompass-ml            # environment name
+channels:
+  - conda-forge          # preferred community channel
+  - pytorch              # to get official PyTorch builds
+dependencies:
+  # Core language
+  - python=3.10
+  - pip
+
+  # Jupyter
+  - jupyterlab>=4.0
+
+  # ML  and Data Science
+  - numpy
+  - scipy
+  - scikit-learn
+  - pandas
+  - matplotlib
+  - seaborn
+
+  # Utility
+  - PyYAML
+  - pillow
+  - tqdm
+  - pip:
+      - mlflow=2.22.1
+      - prefect>=2.19
+      - evidently>=0.5
