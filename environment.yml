@@ -19,6 +19,7 @@ dependencies:
   - seaborn
 
   # Utility
+  - hyperopt
   - PyYAML
   - pillow
   - tqdm
