@@ -18,12 +18,18 @@ dependencies:
   - matplotlib
   - seaborn
 
+  # web application
+  - flask
+  - gunicorn            # good for production
+
   # Utility
   - hyperopt
   - PyYAML
   - pillow
   - tqdm
   - pip:
-      - mlflow=2.22.1
+      - mlflow==2.22.1
       - prefect>=2.19
       - evidently>=0.5
+      - "prefect>=2.2"  
+    

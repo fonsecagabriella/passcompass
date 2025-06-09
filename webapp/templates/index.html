@@ -1,0 +1,30 @@
+<!doctype html>
+<title>PassCompass Predictor</title>
+<h2>Pass / Fail Predictor</h2>
+<form id="form">
+  <label>Age: <input name="age" type="number" value="17"></label><br>
+  <label>Sex:
+    <select name="sex">
+      <option value="F">F</option><option value="M">M</option>
+    </select>
+  </label><br>
+  <label>Study time (1-4):
+    <input name="studytime" type="number" value="2">
+  </label><br>
+  <!-- add more inputs as you like -->
+  <button type="submit">Predict</button>
+</form>
+<pre id="out"></pre>
+<script>
+document.getElementById('form').onsubmit = async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  const res  = await fetch('/predict', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  document.getElementById('out').textContent = JSON.stringify(
+    await res.json(), null, 2);
+};
+</script>
