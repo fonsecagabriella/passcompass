@@ -1,0 +1,37 @@
+{
+  "inputs": [
+    {
+      "school": "GP",
+      "sex": "F",
+      "age": 17,
+      "address": "R",
+      "famsize": "LE3",
+      "Pstatus": "A",
+      "Medu": 1,
+      "Fedu": 4,
+      "Mjob": "other",
+      "Fjob": "other",
+      "reason": "course",
+      "guardian": "other",
+      "traveltime": 4,
+      "studytime": 1,
+      "failures": 1,
+      "schoolsup": "no",
+      "famsup": "yes",
+      "paid": "no",
+      "activities": "no",
+      "nursery": "yes",
+      "higher": "yes",
+      "internet": "yes",
+      "romantic": "no",
+      "famrel": 5,
+      "freetime": 5,
+      "goout": 4,
+      "Dalc": 1,
+      "Walc": 1,
+      "health": 5,
+      "absences": 14,
+      "course": "por"
+    }
+  ]
+}
