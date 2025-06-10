@@ -5,13 +5,22 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
 from passcompass_utils.metrics import log_classification_report
+from pathlib import Path
 
-DATA_DIR = pathlib.Path("../data/students")
+
+# PREFECT SETTINGS
+import os
+os.environ["PREFECT_API_URL"] = "http://127.0.0.1:4200/api"
+# optional – silence the telemetry SSL warning
+os.environ["PREFECT_SEND_ANONYMOUS_TELEMETRY"] = "0"
+
+BASE_DIR = Path(__file__).resolve().parents[1]      # project root
+CSV_PATH = BASE_DIR / "data" / "students" / "students_train.csv"
 
 @task
-def download_data() -> pathlib.Path:
+def download_data() -> Path:
     """Return path to fresh CSV (already downloaded in repo)."""
-    return DATA_DIR / "students_train.csv"
+    return CSV_PATH
 
 @task
 def preprocess(csv_path: pathlib.Path):
