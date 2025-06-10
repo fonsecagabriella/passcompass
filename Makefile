@@ -22,3 +22,10 @@ webapp-dev:
 
 webapp-prod:
 	gunicorn -w 4 -b 0.0.0.0:8000 webapp.app:app
+
+# ---- PREFECT ----
+prefect-ui:
+	prefect server start
+
+prefect-dash:
+	prefect dashboard
