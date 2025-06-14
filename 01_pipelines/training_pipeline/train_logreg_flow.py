@@ -10,7 +10,7 @@ ACC_MIN = 0.78          #  ←  set later!
 MAX_EVALS = 25
 # ----------------------------------------------------------------------
 
-@flow(name="train-logreg-tuned")
+@flow(name="train_logreg_flow")
 def train_logreg_flow(
     data_path: str = "data/train.parquet",
     acc_min: float = ACC_MIN,
