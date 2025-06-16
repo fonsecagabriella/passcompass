@@ -4,8 +4,10 @@ import numpy as np
 from hyperopt import fmin, tpe, Trials, STATUS_OK
 from sklearn.metrics import accuracy_score, recall_score, precision_recall_curve
 
-from metrics import log_classification_report, evaluate_and_log  # <- your helpers
-
+from passcompass_utils.metrics import (
+    log_classification_report,
+    evaluate_and_log,
+)
 
 def _best_threshold(y_true, prob_fail, acc_min):
     """
