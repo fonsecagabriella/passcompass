@@ -11,21 +11,23 @@ from passcompass_utils.metrics import (
 
 def _best_threshold(y_true, prob_fail, acc_min):
     """
-    Sweep thresholds on validation set and pick the one that gives the
-    highest recall for the *fail* class (label 0) **while** keeping
-    accuracy >= acc_min.  Returns (thr, recall_fail, accuracy).
+    Sweep thresholds; pick the one with highest recall_fail
+    while maintaining accuracy >= acc_min.
     """
-    thresholds = np.linspace(0.0, 1.0, 101)  # 0.00…1.00
-    best_thr, best_recall, best_acc = 0.5, 0.0, 0.0
+    thresholds = np.linspace(0.0, 1.0, 101)
+    best_thr, best_rec, best_acc = 0.5, 0.0, 0.0
 
     for thr in thresholds:
-        y_pred = (prob_fail >= thr).astype(int == 0)  # predict 0 if prob_fail ≥ thr
+        # predict label 0 ("fail") if prob_fail >= thr, else 1 ("pass")
+        y_pred = (prob_fail >= thr).astype(int)          # 1 if True else 0
+        y_pred = 1 - y_pred                              # invert → 0=fail,1=pass
         acc  = accuracy_score(y_true, y_pred)
         rec0 = recall_score(y_true, y_pred, pos_label=0)
-        if acc >= acc_min and rec0 > best_recall:
-            best_thr, best_recall, best_acc = thr, rec0, acc
 
-    return best_thr, best_recall, best_acc
+        if acc >= acc_min and rec0 > best_rec:
+            best_thr, best_rec, best_acc = thr, rec0, acc
+
+    return best_thr, best_rec, best_acc
 
 
 def run_hpo(
