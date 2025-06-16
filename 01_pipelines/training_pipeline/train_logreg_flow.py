@@ -2,7 +2,7 @@ from prefect import flow
 from hyperopt import hp
 
 from sklearn.linear_model import LogisticRegression
-from data_tasks import load_data, vectorize
+from data_tasks import load_data, vectorize, latest_dataset
 from train_utils import run_hpo
 
 # ─── you will overwrite this from Prefect CLI or env var ──────────────
@@ -12,9 +12,10 @@ MAX_EVALS = 25
 
 @flow(name="train_logreg_flow")
 def train_logreg_flow(
-    data_path: str = "data/train.parquet",
+    base_data_dir: str = "data/passcompass",
     acc_min: float = ACC_MIN,
 ):
+    data_path = latest_dataset(base_data_dir)
     df = load_data(data_path)
     X_train, X_val, y_train, y_val, dv = vectorize(df)
 

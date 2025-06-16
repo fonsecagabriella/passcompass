@@ -13,20 +13,32 @@ conda activate passcompass-ml
 
 If you prefer using pipenv, check [requirements.txt](./requirements.txt)
 
+- Start prefect `prefect server start`
+- First time only: create work-pool `prefect work-pool create default -t process`
+- Star Mlflow
 
+```bash
+mlflow server \
+  --backend-store-uri sqlite:///mlflow.db \
+  --default-artifact-root file:./artifacts \
+  --serve-artifacts \
+  --host 127.0.0.1 \
+  --port 5001
+```
 
+or
 
+`mlflow server --config conf/mlflow_local.yaml --serve-artifacts`
 
-prefect deploy \
-  01_pipelines/training_pipeline/train_logreg_flow.py:train_logreg_flow \
-  --name dev \
-  --param acc_min=0.80 \
-  --pool default
+When you're ready do deploy and/or is something changes on code:
   
-
-  prefect deploy \
+```bash
+prefect deploy \                                          
   01_pipelines/training_pipeline/train_logreg_flow.py:train_logreg_flow \
   --name dev \
-  --param acc_min=0.80 \
-  --pool default \
-  --work-dir .
+  --param acc_min=0.8 \
+  --pool default
+```
+
+to schedyle a run: `prefect deployment run 'train_logreg_flow/dev'`
+
