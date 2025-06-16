@@ -1,5 +1,5 @@
 from prefect import flow
-from hyperopt import hp, loguniform
+from hyperopt import hp
 
 from sklearn.linear_model import LogisticRegression
 from data_tasks import load_data, vectorize
@@ -19,7 +19,7 @@ def train_logreg_flow(
     X_train, X_val, y_train, y_val, dv = vectorize(df)
 
     search_space = {
-        "C":          loguniform("C", -7, 4),    #  e^(−7)…e^(4)
+        "C":          hp.loguniform("C", -7, 4),    #  e^(−7)…e^(4)
         "penalty":    hp.choice("penalty", ["l1", "l2"]),
         "class_weight": hp.choice("cw", [None, "balanced"]),
         "solver": "liblinear",
