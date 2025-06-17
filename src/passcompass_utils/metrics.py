@@ -77,9 +77,6 @@ def evaluate_and_log(
 
     return metrics
 
-
-
-
 def _flatten_report(report: Mapping[str, dict], prefix: str = "") -> dict:
     """
     Turn sklearn's nested classification_report dict into
@@ -121,6 +118,8 @@ def log_classification_report(
 
     # --- log to MLflow ---
     run = run or mlflow.active_run()
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("test")
     if run:
         for k, v in metrics.items():
             mlflow.log_metric(k, v)
