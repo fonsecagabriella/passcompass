@@ -50,5 +50,10 @@ to schedyle a run: `prefect deployment run 'train_logreg_flow/dev'`
 
 **IF THERE'S CHANGE TO CODE**
 - commit to github
+```bash
+git add 01_pipelines/training_pipeline/train_utils.py
+git commit -m "Fix threshold sweep dtype bug"
+git push origin main
+```
 - deploy like example above
 - schedule a run
