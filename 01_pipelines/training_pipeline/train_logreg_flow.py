@@ -32,7 +32,7 @@ def train_logreg_flow(
         search_space,
         X_train, y_train, X_val, y_val,
         dv,
-        experiment_name="MLflow-training",
+        experiment_name="passcompass",
         tag_name="logreg",
         acc_min=acc_min,
         max_evals=MAX_EVALS,
