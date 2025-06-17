@@ -33,6 +33,12 @@ or
 When you're ready do deploy and/or is something changes on code:
   
 ```bash
+prefect deploy \
+  01_pipelines/training_pipeline/train_logreg_flow.py:train_logreg_flow \
+  --name dev --pool default --param acc_min=0.8
+```
+
+```bash
 prefect deploy \                                          
   01_pipelines/training_pipeline/train_logreg_flow.py:train_logreg_flow \
   --name dev \
@@ -42,3 +48,7 @@ prefect deploy \
 
 to schedyle a run: `prefect deployment run 'train_logreg_flow/dev'`
 
+**IF THERE'S CHANGE TO CODE**
+- commit to github
+- deploy like example above
+- schedule a run

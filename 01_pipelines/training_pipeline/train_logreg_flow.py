@@ -33,7 +33,8 @@ def train_logreg_flow(
         X_train, y_train, X_val, y_val,
         dv,
         experiment_name="passcompass",
-        tag_name="logreg",
+        #tag_name={"logreg"},
+        tags={"model": tag_name},
         acc_min=acc_min,
         max_evals=MAX_EVALS,
     )

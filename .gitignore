@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Prefect temp
+passcompass-main/
+tmp*/
+
 # Distribution / packaging
 .Python
 build/
