@@ -53,6 +53,7 @@ def run_hpo(
     mlflow.set_experiment(experiment_name)
 
     def objective(params):
+        mlflow.set_tracking_uri("http://127.0.0.1:5001")
         with mlflow.start_run(nested=True, tags={"model": tag_name}):
             # --------  train
             model = model_cls(**params)
