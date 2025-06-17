@@ -19,9 +19,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
-mlflow.set_experiment("test")
-
 def evaluate_and_log(
     model,                     # fitted estimator with predict / predict_proba
     X_test, y_test,
