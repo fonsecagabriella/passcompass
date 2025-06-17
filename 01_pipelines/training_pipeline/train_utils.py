@@ -9,6 +9,15 @@ from passcompass_utils.metrics import (
     evaluate_and_log,
 )
 
+def ensure_experiment(name: str = "MLflow-training"):
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001"))
+    exp = mlflow.get_experiment_by_name(name)
+    if exp is None:
+        mlflow.create_experiment(name)
+    mlflow.set_experiment(name)
+
+
+
 def _best_threshold(y_true, prob_fail, acc_min):
     """
     Sweep thresholds; pick the one with highest recall_fail
@@ -38,7 +47,7 @@ def run_hpo(
     X_val,
     y_val,
     dv,
-    experiment_name: str,
+    experiment_name: "MLflow-training",
     tag_name: str,
     acc_min: float,                   # <-- external variable
     max_evals: int = 30,
@@ -49,11 +58,11 @@ def run_hpo(
     (ii) tunes a decision threshold *after* training,
     (iii) logs only models whose tuned accuracy >= acc_min.
     """
-
-    mlflow.set_experiment(experiment_name)
+    ensure_experiment(experiment_name)
+    #mlflow.set_experiment(experiment_name)
 
     def objective(params):
-        mlflow.set_tracking_uri("http://127.0.0.1:5001")
+
         with mlflow.start_run(nested=True, tags={"model": tag_name}):
             # --------  train
             model = model_cls(**params)
