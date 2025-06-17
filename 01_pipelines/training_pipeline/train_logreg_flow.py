@@ -34,7 +34,7 @@ def train_logreg_flow(
         dv,
         experiment_name="passcompass",
         #tag_name={"logreg"},
-        tags={"model": tag_name},
+        tags={"model": "logreg"},
         acc_min=acc_min,
         max_evals=MAX_EVALS,
     )
