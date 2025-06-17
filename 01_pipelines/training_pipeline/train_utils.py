@@ -73,7 +73,13 @@ def run_hpo(
             })
 
             # full report (uses tuned threshold)
+            if predict_proba >= thr:
+                y_pred_tuned = 1
+            else:
+                y_pred_tuned = 0
+            
             y_pred_tuned = (prob_fail >= thr).astype(int == 0)
+
             log_classification_report(
                 y_val, y_pred_tuned, prefix="val_"
             )
