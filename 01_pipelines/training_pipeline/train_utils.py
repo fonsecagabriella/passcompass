@@ -77,9 +77,8 @@ def run_hpo(
             thr, rec0, acc = _best_threshold(y_val, prob_fail, acc_min)
 
             # --------  log metrics
-            tag_name = "logreg"
             mlflow.log_param("model_type", tag_name)
-            mlflow.set_tag("model_type", tag_name) 
+
 
             # --------  log metrics
             mlflow.log_param("threshold", thr)
