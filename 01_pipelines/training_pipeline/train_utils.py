@@ -74,7 +74,8 @@ def run_hpo(
 
             # full report (uses tuned threshold)
 
-            y_pred_tuned = (prob_fail >= thr).astype(int == 0)
+            y_pred_tuned = (prob_fail >= thr).astype(int)   # 1 = fail, 0 = pass
+            y_pred_tuned = 1 - y_pred_tuned                # invert so 0 = fail, 1 = pass
 
             log_classification_report(
                 y_val, y_pred_tuned, prefix="val_"
