@@ -85,8 +85,8 @@ def run_hpo(
             mlflow.log_param(
                 "num_features", len(dv.feature_names_)
             )
-            mlflow.set_tag("feature_list",
-                           json.dumps(dv.feature_names_.tolist()))
+            feature_list = list(dv.feature_names_)      # always a Python list
+            mlflow.set_tag("feature_list", json.dumps(feature_list))
 
             # --------  optionally save the model
             if acc >= acc_min:
