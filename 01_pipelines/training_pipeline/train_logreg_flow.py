@@ -39,3 +39,7 @@ def train_logreg_flow(
         max_evals=MAX_EVALS,
     )
     print("✔️  Best params:", best)
+
+
+if __name__ == "__main__":
+    train_logreg_flow()

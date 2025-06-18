@@ -1,0 +1,4 @@
+- prefect flow: use tags for comparing models
+    - now tags with a dictionary for value doesn't work
+- prefect flow: implement triggers for when new data, run new training
+- prefect flow: implement tests of other models
