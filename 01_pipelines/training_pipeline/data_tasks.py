@@ -14,6 +14,7 @@ def vectorize(df, target_col: str = "pass"):
     Returns X_train, X_val, y_train, y_val, DictVectorizer
     """
     y = df[target_col].values
+
     dicts = df.drop(columns=[target_col]).to_dict(orient="records")
 
     dv = DictVectorizer(sparse=True)

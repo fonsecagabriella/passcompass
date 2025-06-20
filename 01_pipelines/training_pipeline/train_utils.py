@@ -68,7 +68,14 @@ def run_hpo(
         with mlflow.start_run(nested=True, tags={"model": tag_name}):
             # --------  train
             model = model_cls(**params)
-            model.fit(X_train, y_train)
+            #model.fit(X_train, y_train)
+
+            pipe = Pipeline([
+                ("dv",   dv),
+                ("clf",  model),
+            ])
+
+            pipe.fit(X_train, y_train)
 
             # --------  probability of *fail* (label 0)
             idx_fail = list(model.classes_).index(0)
@@ -103,7 +110,7 @@ def run_hpo(
             )
             #feature_list = list(dv.feature_names_)      # always a Python list
             #mlflow.set_tag("feature_list", json.dumps(feature_list))
-            
+
             # --------  log feature schema  ---------------------------------------
             from collections import defaultdict
             schema = []
@@ -130,7 +137,7 @@ def run_hpo(
             # --------  optionally save the model
             if acc >= acc_min:
                 mlflow.sklearn.log_model(
-                    model, "model",
+                    pipe, "model",
                     input_example=X_train[:1],
                     registered_model_name=None,
                     extra_pip_requirements=["scikit-learn"]
