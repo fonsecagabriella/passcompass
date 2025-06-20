@@ -1,21 +1,38 @@
 <!doctype html>
 <title>PassCompass Predictor</title>
 <h2>Pass / Fail Predictor</h2>
-<form id="form">
-  <label>Age: <input name="age" type="number" value="17"></label><br>
-  <label>Sex:
-    <select name="sex">
-      <option value="F">F</option><option value="M">M</option>
-    </select>
-  </label><br>
-  <label>Study time (1-4):
-    <input name="studytime" type="number" value="2">
-  </label><br>
-  <!-- add more inputs as you like -->
+<body>
+  <h2>Pass / Fail Predictor</h2>
+  <form id="form"></form>
+  <pre id="out"></pre>
   <button type="submit">Predict</button>
 </form>
 <pre id="out"></pre>
+
+
 <script>
+
+async function buildForm() {
+  const schema = await (await fetch('/features')).json();
+  const form   = document.getElementById('form');
+
+  schema.forEach(f => {
+    let field;
+    if (f.kind === 'numeric') {
+      field = `<label>${f.name}: <input type="number" name="${f.name}"></label>`;
+    } else if (f.kind === 'categorical') {
+      const opts = f.choices.map(c => `<option value="${c}">${c}</option>`).join('');
+      field = `<label>${f.name}: <select name="${f.name}">${opts}</select></label>`;
+    }
+    form.insertAdjacentHTML('beforeend', field + '<br>');
+  });
+
+  form.insertAdjacentHTML('beforeend', '<button type="submit">Predict</button>');
+}
+buildForm();
+
+
+
 document.getElementById('form').onsubmit = async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
@@ -28,3 +45,4 @@ document.getElementById('form').onsubmit = async (e) => {
     await res.json(), null, 2);
 };
 </script>
+</body>

@@ -3,7 +3,8 @@ import mlflow
 import os
 import numpy as np
 from hyperopt import fmin, tpe, Trials, STATUS_OK
-from sklearn.metrics import accuracy_score, recall_score, precision_recall_curve
+from sklearn.metrics import accuracy_score, recall_score, 
+from sklearn.pipeline import Pipeline
 
 from passcompass_utils.metrics import (
     log_classification_report,
@@ -100,8 +101,31 @@ def run_hpo(
             mlflow.log_param(
                 "num_features", len(dv.feature_names_)
             )
-            feature_list = list(dv.feature_names_)      # always a Python list
-            mlflow.set_tag("feature_list", json.dumps(feature_list))
+            #feature_list = list(dv.feature_names_)      # always a Python list
+            #mlflow.set_tag("feature_list", json.dumps(feature_list))
+            
+            # --------  log feature schema  ---------------------------------------
+            from collections import defaultdict
+            schema = []
+            for raw_col in df.columns.drop("target"):
+                if df[raw_col].dtype.kind in "biufc":           # numeric
+                    schema.append({
+                        "name": raw_col,
+                        "kind": "numeric",
+                        "min":  float(df[raw_col].min()),
+                        "max":  float(df[raw_col].max()),
+                    })
+                else:                                           # categorical
+                    schema.append({
+                        "name":    raw_col,
+                        "kind":    "categorical",
+                        "choices": sorted(df[raw_col].dropna().unique().tolist()),
+                    })
+
+            mlflow.log_dict(schema, "feature_schema.json")     # <- real artifact
+            mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / search
+
+            #mlflow.log_dict(feature_list, "feature_list.json")
 
             # --------  optionally save the model
             if acc >= acc_min:
