@@ -3,7 +3,7 @@ import mlflow
 import os
 import numpy as np
 from hyperopt import fmin, tpe, Trials, STATUS_OK
-from sklearn.metrics import accuracy_score, recall_score, 
+from sklearn.metrics import accuracy_score, recall_score
 from sklearn.pipeline import Pipeline
 
 from passcompass_utils.metrics import (
