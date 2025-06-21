@@ -25,7 +25,7 @@ def vectorize(df, target_col: str = "pass"):
     )
 
     schema = []
-    for raw_col in df.columns.drop("target"):
+    for raw_col in df.columns.drop(target_col):
         if df[raw_col].dtype.kind in "biufc":           # numeric
             schema.append({
                 "name": raw_col,
