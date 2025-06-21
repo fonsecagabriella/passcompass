@@ -5,6 +5,7 @@ import numpy as np
 from hyperopt import fmin, tpe, Trials, STATUS_OK
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.pipeline import Pipeline
+import joblib
 
 from passcompass_utils.metrics import (
     log_classification_report,
@@ -68,14 +69,14 @@ def run_hpo(
         with mlflow.start_run(nested=True, tags={"model": tag_name}):
             # --------  train
             model = model_cls(**params)
-            #model.fit(X_train, y_train)
+            model.fit(X_train, y_train)
 
-            pipe = Pipeline([
-                ("dv",   dv),
-                ("clf",  model),
-            ])
+            #pipe = Pipeline([
+            #    ("dv",   dv),
+            #    ("clf",  model),
+            #])
 
-            pipe.fit(X_train, y_train)
+            #pipe.fit(X_train, y_train)
 
             # --------  probability of *fail* (label 0)
             idx_fail = list(model.classes_).index(0)
@@ -112,7 +113,7 @@ def run_hpo(
             #mlflow.set_tag("feature_list", json.dumps(feature_list))
 
             # --------  log feature schema  ---------------------------------------
-            from collections import defaultdict
+            #from collections import defaultdict
             schema = []
             for raw_col in df.columns.drop("target"):
                 if df[raw_col].dtype.kind in "biufc":           # numeric
@@ -130,14 +131,17 @@ def run_hpo(
                     })
 
             mlflow.log_dict(schema, "feature_schema.json")     # <- real artifact
-            mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / search
+            mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / 
+
+            mlflow.log_artifact(joblib.dump(dv, "/tmp/dv.pkl")[0], "dv.pkl")
+
 
             #mlflow.log_dict(feature_list, "feature_list.json")
 
             # --------  optionally save the model
             if acc >= acc_min:
                 mlflow.sklearn.log_model(
-                    pipe, "model",
+                    model, "model",
                     input_example=X_train[:1],
                     registered_model_name=None,
                     extra_pip_requirements=["scikit-learn"]
