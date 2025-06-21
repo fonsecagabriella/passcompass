@@ -17,7 +17,7 @@ def train_logreg_flow(
 ):
     data_path = latest_dataset(base_data_dir)
     df = load_data(data_path)
-    X_train, X_val, y_train, y_val, dv = vectorize(df)
+    X_train, X_val, y_train, y_val, dv, schema = vectorize(df)
 
     search_space = {
         "C":          hp.loguniform("C", -7, 4),    #  e^(−7)…e^(4)
@@ -37,6 +37,7 @@ def train_logreg_flow(
         #tags={"model": "logreg"},
         acc_min=acc_min,
         max_evals=MAX_EVALS,
+        schema=schema
     )
     print("✔️  Best params:", best)
 

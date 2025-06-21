@@ -21,7 +21,7 @@ def train_gbd_flow(
     # ── 1. Load & vectorise ────────────────────────────────────────────────
     data_path = latest_dataset(base_data_dir)
     df = load_data(data_path)
-    X_train, X_val, y_train, y_val, dv = vectorize(df)
+    X_train, X_val, y_train, y_val, dv, schema = vectorize(df)
 
     # ── 2. Hyperopt search-space (cast ints in objective – see below) ─────
     search_space = {
@@ -45,6 +45,7 @@ def train_gbd_flow(
         tag_name="gbc",              # every run gets tag model=rf
         acc_min=acc_min,
         max_evals=MAX_EVALS,
+        schema=schema
     )
     print("✔️  GBC best params:", best)
 

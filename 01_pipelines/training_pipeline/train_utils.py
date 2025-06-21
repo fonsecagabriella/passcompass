@@ -55,6 +55,7 @@ def run_hpo(
     acc_min: float,                   # <-- external variable
     max_evals: int = 30,
     random_state=None,
+    schema=None,                      # <- optional feature schema
 ):
     """
     One Hyperopt loop that   (i) tunes hyper-parameters,
@@ -114,21 +115,7 @@ def run_hpo(
 
             # --------  log feature schema  ---------------------------------------
             #from collections import defaultdict
-            schema = []
-            for raw_col in df.columns.drop("target"):
-                if df[raw_col].dtype.kind in "biufc":           # numeric
-                    schema.append({
-                        "name": raw_col,
-                        "kind": "numeric",
-                        "min":  float(df[raw_col].min()),
-                        "max":  float(df[raw_col].max()),
-                    })
-                else:                                           # categorical
-                    schema.append({
-                        "name":    raw_col,
-                        "kind":    "categorical",
-                        "choices": sorted(df[raw_col].dropna().unique().tolist()),
-                    })
+
 
             mlflow.log_dict(schema, "feature_schema.json")     # <- real artifact
             mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / 

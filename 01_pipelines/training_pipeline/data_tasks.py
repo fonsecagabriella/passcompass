@@ -23,7 +23,25 @@ def vectorize(df, target_col: str = "pass"):
     X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.2, stratify=y, random_state=42
     )
-    return X_train, X_val, y_train, y_val, dv
+
+    schema = []
+    for raw_col in df.columns.drop("target"):
+        if df[raw_col].dtype.kind in "biufc":           # numeric
+            schema.append({
+                "name": raw_col,
+                "kind": "numeric",
+                "min":  float(df[raw_col].min()),
+                "max":  float(df[raw_col].max()),
+            })
+        else:                                           # categorical
+            schema.append({
+                "name":    raw_col,
+                "kind":    "categorical",
+                "choices": sorted(df[raw_col].dropna().unique().tolist()),
+            })
+
+
+    return X_train, X_val, y_train, y_val, dv, schema
 
 @task
 def latest_dataset(base_dir: str = "data/passcompass") -> str:
