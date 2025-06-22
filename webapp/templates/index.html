@@ -1,48 +1,19 @@
 <!doctype html>
-<title>PassCompass Predictor</title>
-<h2>Pass / Fail Predictor</h2>
-<body>
-  <h2>Pass / Fail Predictor</h2>
-  <form id="form"></form>
-  <pre id="out"></pre>
-  <button type="submit">Predict</button>
-</form>
-<pre id="out"></pre>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PassCompass – Pass / Fail Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
 
+  <body>
+    <h1>🎓 Pass / Fail Predictor</h1>
 
-<script>
+    <form id="form"></form>
 
-async function buildForm() {
-  const schema = await (await fetch('/features')).json();
-  const form   = document.getElementById('form');
+    <pre id="out" class="result"></pre>
 
-  schema.forEach(f => {
-    let field;
-    if (f.kind === 'numeric') {
-      field = `<label>${f.name}: <input type="number" name="${f.name}"></label>`;
-    } else if (f.kind === 'categorical') {
-      const opts = f.choices.map(c => `<option value="${c}">${c}</option>`).join('');
-      field = `<label>${f.name}: <select name="${f.name}">${opts}</select></label>`;
-    }
-    form.insertAdjacentHTML('beforeend', field + '<br>');
-  });
-
-  form.insertAdjacentHTML('beforeend', '<button type="submit">Predict</button>');
-}
-buildForm();
-
-
-
-document.getElementById('form').onsubmit = async (e) => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target).entries());
-  const res  = await fetch('/predict', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  });
-  document.getElementById('out').textContent = JSON.stringify(
-    await res.json(), null, 2);
-};
-</script>
-</body>
+    <!-- JS bundle -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

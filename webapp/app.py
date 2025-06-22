@@ -12,25 +12,35 @@ app = Flask(__name__)
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 print("Loading model…")
-MODEL_ALIAS = os.getenv("MODEL_ALIAS", "best_passcompass_jun_2025")
+MODEL_ALIAS = os.getenv("MODEL_ALIAS", "best_202506")
 
-client  = MlflowClient()
+# 1️⃣  Point the client at the same server you open in the browser
+mlflow.set_tracking_uri("http://127.0.0.1:5001")      # or http://localhost:5001
+
+# 2️⃣  Now create the client and fetch by alias
+client = MlflowClient()
+
+MODEL_NAME  = "passcompass_generic"
+MODEL_ALIAS = "best_202506"          # no leading '@'
+
 mv = client.get_model_version_by_alias(MODEL_NAME, MODEL_ALIAS)  # ModelVersion object
 run_id = mv.run_id
 
-#model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}@{MODEL_ALIAS}")
+model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}@{MODEL_ALIAS}")
 
 #print(model.metadata)  # print model metadata
+
+print(f"Loading model {MODEL_NAME} v{mv.version} from run {run_id}…")
 
 # ── fetch and cache the feature schema ─────────────────────────────────
 
 #run_id     = model.run_id
-local_path = client.download_artifacts(run_id, "feature_list.json")
+local_path = client.download_artifacts(run_id, "feature_schema.json")
 with open(local_path) as f:
     FEATURE_SCHEMA = json.load(f)
 
 @app.route("/", methods=["GET"])
-def index():
+def home(): # or def index()
     return render_template("index.html")
 
 @app.route("/predict", methods=["POST"])
@@ -54,11 +64,22 @@ def predict():
 
 
 @app.route("/features", methods=["GET"])
-def get_features():
-    try:
-        return jsonify(FEATURE_SCHEMA)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def features():
+    schema = [
+        {"name": "age", "kind": "numeric", "min": 15, "max": 22},
+        {"name": "sex", "kind": "categorical",
+         "choices": ["F", "M"]},
+        {"name": "address", "kind": "categorical",
+         "choices": ["U", "R"]},
+        # …
+        {"name": "traveltime", "kind": "categorical",
+         "choices": [1, 2, 3, 4]},
+        {"name": "studytime",  "kind": "categorical",
+         "choices": [1, 2, 3, 4]},
+        {"name": "failures", "kind": "numeric", "min": 0, "max": 3},
+        {"name": "absences", "kind": "numeric", "min": 0, "max": 93},
+    ]
+    return jsonify(schema)
 
 
 if __name__ == "__main__":

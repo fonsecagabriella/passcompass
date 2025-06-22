@@ -1,0 +1,47 @@
+body{
+  font-family: system-ui, sans-serif;
+  max-width : 55rem;
+  margin    : 2rem auto;
+  padding   : 0 1rem;
+  line-height: 1.5;
+}
+
+h1{ font-size: 1.8rem; margin-bottom: 1.5rem; }
+
+.field{
+  display: flex;
+  flex-direction: column;
+  margin-bottom : 1rem;
+}
+
+.field label{ margin-bottom: .3rem; font-weight: 600; }
+
+input, select{
+  padding: .4rem .6rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: .25rem;
+}
+
+.btn{
+  padding: .6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  color: #fff;
+  background: #0061ff;
+  border-radius: .25rem;
+  cursor: pointer;
+}
+
+.btn:hover{ background: #004ecc; }
+
+.result{
+  background: #f5f7fa;
+  padding: 1rem;
+  border-radius: .25rem;
+  margin-top: 2rem;
+}
+
+input:invalid, select:invalid{
+  border-color: #e55353;          /* red outline */
+}
