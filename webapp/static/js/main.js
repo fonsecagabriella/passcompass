@@ -1,7 +1,16 @@
-/* main.js: builds the form dynamically and handles prediction */
+/* main.js ──────────────────────────────────────────────────────────
+ *
+ * 1. Fetch the feature schema from /features          (buildForm)
+ * 2. Render:
+ *      • categorical  → <select>
+ *      • numeric      → <input type="range"> slider  (NEW)
+ * 3. Live-update the number shown next to each slider
+ * 4. Collect the form and POST /predict
+ *
+ * Author: ChatGPT facelift 2025-06-23
+ *───────────────────────────────────────────────────────────────────*/
 
-
-/* Field labels */
+/* ── 1. Field labels (UI friendly) ─────────────────────────────── */
 const fieldLabel = {
   school     : "School",
   course     : "Course",
@@ -9,7 +18,7 @@ const fieldLabel = {
   age        : "Age (years)",
   address    : "Home address",
   famsize    : "Family size",
-  Pstatus    : "Parents’ cohabitation",
+  Pstatus    : "Parents’ co-habitation",
   Medu       : "Mother’s education level",
   Fedu       : "Father’s education level",
   Mjob       : "Mother’s job",
@@ -34,113 +43,150 @@ const fieldLabel = {
   Walc       : "Weekend alcohol use",
   health     : "Current health status",
   absences   : "School absences",
-  // ↳ extend if your model expects more columns
 };
 
-/*  Choice-value labels  (add / extend freely) */
+/* ── 2. Value-labels for dropdowns ─────────────────────────────── */
 const valueLabel = {
   school   : { GP: "Gabriel Pereira", MS: "Mousinho Silveira" },
   sex      : { F: "Female", M: "Male" },
   address  : { U: "Urban",  R: "Rural" },
-  famsize  : { GT3: " > 3 people", LE3: " ≤ 3 people" },
+  famsize  : { GT3: "> 3 people", LE3: "≤ 3 people" },
   Pstatus  : { T: "Together", A: "Apart" },
-  Mjob     : { at_home: "At home", health: "Health", other: "Other",
-                 services: "Services", teacher: "Teacher" },
-  Fjob     : { at_home: "At home", health: "Health", other: "Other",
-                 services: "Services", teacher: "Teacher" },
-  Medu     : { 0: "None", 1: "Primary", 2: "Lower secondary",
-                 3: "Upper secondary", 4: "Higher Education" },
-  Fedu     : { 0: "None", 1: "Primary", 2: "Lower secondary",
-                 3: "Upper secondary", 4: "Higher Education" },
-  
-
-  /* fall-back groups — reuse across many columns */
   yesNo    : { yes: "Yes", no: "No" },
-  boolean  : { yes: "Yes", no: "No" },
+};
+const prettyChoice = (field, raw) =>
+  (valueLabel[field]?.[raw]) ?? (valueLabel.yesNo?.[raw]) ?? raw;
+
+/* ─── groups: assign each field to a section title ───────────── */
+const groupMap = {
+  /* Student profile */
+  school: "Student profile", course: "Student profile", sex: "Student profile",
+  age: "Student profile", address: "Student profile",
+
+  /* Home & Support */
+  famsize: "Home & Support", Pstatus: "Home & Support",
+  guardian: "Home & Support", Medu: "Home & Support", Fedu: "Home & Support",
+  schoolsup: "Home & Support", famsup: "Home & Support", paid: "Home & Support",
+  internet: "Home & Support",
+
+  /* Study habits */
+  traveltime: "Study habits", studytime: "Study habits",
+  failures: "Study habits", higher: "Study habits",
+
+  /* Lifestyle */
+  activities: "Lifestyle", nursery: "Lifestyle", romantic: "Lifestyle",
+  famrel: "Lifestyle", freetime: "Lifestyle", goout: "Lifestyle",
+  Dalc: "Lifestyle", Walc: "Lifestyle", health: "Lifestyle",
+  absences: "Lifestyle", reason: "Lifestyle", Mjob: "Lifestyle", Fjob: "Lifestyle",
 };
 
-/* Helper → picks the correct label map for a field */
-function prettyChoice(field, raw) {
-  const map =
-    valueLabel[field]            // specific map
-    ?? valueLabel.boolean        // common yes/no
-    ?? {};
-  return map[raw] ?? raw;        // fall back to raw value
-}
+const formEl    = document.getElementById("form");
+const outEl     = document.getElementById("out");
+const btnEl     = document.getElementById("predictBtn");
+const spinnerEl = btnEl.querySelector(".spinner");
+const btnLabel  = btnEl.querySelector(".btn-label");
 
-
+/* ───────────────────────────────────────────────────────────── */
 async function buildForm() {
   const schema = await (await fetch("/features")).json();
-  const form   = document.getElementById("form");
+
+  /* container map: groupName → DOM node (details element) */
+  const containers = {};
 
   schema.forEach(col => {
+    const groupName = groupMap[col.name] ?? "Other";
+    if (!containers[groupName]) {
+      /* create <details><summary>… */
+      const details = document.createElement("details");
+      if (groupName === "Student profile") details.open = true; // auto-open 1st
+      details.innerHTML = `
+        <summary>${groupName}</summary>
+        <div class="grid-2col"></div>`;
+      formEl.appendChild(details);
+      containers[groupName] = details.querySelector(".grid-2col");
+    }
+
     const id    = `id_${col.name}`;
     const label = fieldLabel[col.name] ?? col.name;
-    let html    = "";
 
-    /* ─── numeric ───────────────────────────────────────── */
+    /* numeric → range slider */
     if (col.kind === "numeric") {
-      const min = col.min ?? "";
-      const max = col.max ?? "";
-      const rangeHint = (min || max) ? `(${min || "–"}–${max || "–"})` : "";
-
-      html = `
-        <div class="field">
-          <label for="${id}">${label} <small>${rangeHint}</small></label>
-          <input type="number"
-                 id="${id}" name="${col.name}"
-                 ${min && `min="${min}"`}
-                 ${max && `max="${max}"`}
-                 step="any" required>
-        </div>`;
+      containers[groupName].insertAdjacentHTML("beforeend",
+        buildRangeField(col, id, label));
+      const slider = document.getElementById(id);
+      const out    = document.getElementById(`${id}_val`);
+      slider.addEventListener("input", e => out.textContent = e.target.value);
+      return;
     }
 
-    /* ─── categorical ───────────────────────────────────── */
-    else if (col.kind === "categorical") {
-      const opts = col.choices.map(v =>
-        `<option value="${v}">${prettyChoice(col.name, v)}</option>`
-      ).join("");
-
-      html = `
-        <div class="field">
-          <label for="${id}">${label}</label>
-          <select id="${id}" name="${col.name}" required>
-            <option value="" disabled selected>Choose…</option>
-            ${opts}
-          </select>
-        </div>`;
+    /* categorical → select */
+    if (col.kind === "categorical") {
+      containers[groupName].insertAdjacentHTML("beforeend",
+        buildSelectField(col, id, label));
+      return;
     }
 
-    /* ─── unknown kinds – fallback to text ──────────────── */
-    else {
-      console.warn(`Unknown kind '${col.kind}' for '${col.name}'`);
-      html = `
-        <div class="field">
-          <label for="${id}">${label}</label>
-          <input type="text" id="${id}" name="${col.name}" required>
-        </div>`;
-    }
-
-    form.insertAdjacentHTML("beforeend", html);
+    /* fallback */
+    containers[groupName].insertAdjacentHTML("beforeend", `
+      <div class="field">
+        <label for="${id}">${label}</label>
+        <input type="text" id="${id}" name="${col.name}" required>
+      </div>`);
   });
-
-  form.insertAdjacentHTML("beforeend",
-    `<button type="submit" class="btn">Predict</button>`);
 }
 
-buildForm();
+/* ─── HTML builders ─────────────────────────────────────────── */
+function buildRangeField(col, id, label){
+  const min = col.min ?? 0;
+  const max = col.max ?? 10;
+  const mid = Math.round((min + max) / 2);
 
-/* ─────────────────── submit handler ───────────────────── */
-document.addEventListener("submit", async (e) => {
+  return `
+    <div class="field">
+      <label for="${id}">${label} <small>(${min}-${max})</small></label>
+      <input  type="range" id="${id}" name="${col.name}"
+              min="${min}" max="${max}" value="${mid}" step="1" required>
+      <span class="range-value" id="${id}_val">${mid}</span>
+    </div>`;
+}
+function buildSelectField(col, id, label){
+  const opts = col.choices.map(v =>
+    `<option value="${v}">${prettyChoice(col.name, v)}</option>`).join("");
+  return `
+    <div class="field">
+      <label for="${id}">${label}</label>
+      <select id="${id}" name="${col.name}" required>
+        <option value="" disabled selected>Choose…</option>
+        ${opts}
+      </select>
+    </div>`;
+}
+
+/* ─── submit handler ────────────────────────────────────────── */
+document.addEventListener("submit", async e => {
   e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target).entries());
 
-  const res = await fetch("/predict", {
+  const payload = Object.fromEntries(new FormData(formEl).entries());
+
+  /* disable button + show spinner */
+  btnEl.disabled = true;
+  spinnerEl.classList.remove("hidden");
+  btnLabel.textContent = "Predicting…";
+
+  const res  = await fetch("/predict", {
     method : "POST",
     headers: { "Content-Type": "application/json" },
-    body   : JSON.stringify(data)
+    body   : JSON.stringify(payload)
   });
 
-  document.getElementById("out").textContent =
-    JSON.stringify(await res.json(), null, 2);
+  const json = await res.json();
+  outEl.textContent = JSON.stringify(json, null, 2);
+  outEl.classList.remove("hidden");
+
+  btnEl.disabled = false;
+  spinnerEl.classList.add("hidden");
+  btnLabel.textContent = "Predict";
 });
+
+/* bootstrap */
+buildForm();

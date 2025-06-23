@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import mlflow.pyfunc, os, json
+import pickle
 from mlflow.tracking import MlflowClient
 from pathlib import Path
 import pandas as pd
@@ -40,7 +41,8 @@ NUMERIC_COLS = {col["name"] for col in FEATURE_SCHEMA if col["kind"] == "numeric
 
 
 # --- fetch DictVectorizer artifact -----------------------
-dv_path = client.download_artifacts(mv.run_id, "dv.pkl")  
+dv_dir = client.download_artifacts(mv.run_id, "dv.pkl")
+dv_path = os.path.join(dv_dir, "dv.pkl")  
 with open(dv_path, "rb") as f:
     dv = pickle.load(f)
 
@@ -69,12 +71,14 @@ def predict():
     print("Received data:", df)
 
     # ---- 2.1. apply dict vectorizer ----------------------
-    X_predict = dv.transform(df)
+    #X_predict = dv.transform(df)
+    X_predict = dv.transform([casted]).toarray()
 
     # ---- 2.5. check for missing values (future implementation) -----------------------
 
     # ---- 3. predict ------------------------------------------
-    proba_pass = float(model.predict(X)[0,1])
+    print(X_predict.shape, X_predict.dtype )
+    proba_pass = float(model.predict(X_predict))
     #proba_pass = float(model.predict_proba(df)[0, 1])    # col 1 = pass
     label      = "Likely to pass" if proba_pass >= 0.5 else "Likely to fail"
 
