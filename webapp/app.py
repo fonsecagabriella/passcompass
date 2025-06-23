@@ -2,26 +2,25 @@ from flask import Flask, request, jsonify, render_template
 import mlflow.pyfunc, os, json
 from mlflow.tracking import MlflowClient
 from pathlib import Path
+import pandas as pd
+
+# ── Flask app setup ────────────────────────────────────────────────────
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
-MODEL_NAME          = os.getenv("MODEL_NAME", "passcompass_generic")
-#MODEL_STAGE         = os.getenv("MODEL_STAGE", "Staging")   # or "Production"
 MODEL_STAGE         = "Staging"
+MODEL_NAME  = "passcompass_generic"
+MODEL_ALIAS = "best_202506"          # no leading '@'
 
 app = Flask(__name__)
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-print("Loading model…")
-MODEL_ALIAS = os.getenv("MODEL_ALIAS", "best_202506")
 
-# 1️⃣  Point the client at the same server you open in the browser
-mlflow.set_tracking_uri("http://127.0.0.1:5001")      # or http://localhost:5001
 
-# 2️⃣  Now create the client and fetch by alias
+# ── fetch and cache the feature schema  ─────────────────────────────────
+# Create the client and fetch by alias
 client = MlflowClient()
 
-MODEL_NAME  = "passcompass_generic"
-MODEL_ALIAS = "best_202506"          # no leading '@'
+
 
 mv = client.get_model_version_by_alias(MODEL_NAME, MODEL_ALIAS)  # ModelVersion object
 run_id = mv.run_id
@@ -32,54 +31,65 @@ model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}@{MODEL_ALIAS}")
 
 print(f"Loading model {MODEL_NAME} v{mv.version} from run {run_id}…")
 
-# ── fetch and cache the feature schema ─────────────────────────────────
 
-#run_id     = model.run_id
 local_path = client.download_artifacts(run_id, "feature_schema.json")
 with open(local_path) as f:
     FEATURE_SCHEMA = json.load(f)
+
+NUMERIC_COLS = {col["name"] for col in FEATURE_SCHEMA if col["kind"] == "numeric"}
+
+
+# --- fetch DictVectorizer artifact -----------------------
+dv_path = client.download_artifacts(mv.run_id, "dv.pkl")  
+with open(dv_path, "rb") as f:
+    dv = pickle.load(f)
+
+
+# ── define app routes ─────────────────────────────────
 
 @app.route("/", methods=["GET"])
 def home(): # or def index()
     return render_template("index.html")
 
-@app.route("/predict", methods=["POST"])
+@app.post("/predict")
 def predict():
-    """
-    Expects JSON like:
-    {
-      "school":"GP","sex":"F","age":17,"studytime":2, ...
-    }
-    """
-    data = request.get_json(force=True)
-    prediction = model.predict([data])[0]            # 0 = Fail / 1 = Pass
-    #proba      = model.predict_proba([data])[0][1]   # prob of Pass (label 1)
+    raw = request.get_json()            # dict from JS
+    if raw is None:
+        return jsonify(error="No JSON payload"), 400
 
-    return jsonify({
-        "prediction": int(prediction),
-        #"proba_pass": round(float(proba), 3),
-        "proba_pass": round(0.78, 3),
-        "label": "Pass" if prediction else "Fail"
-    })
+    # ---- 1. cast numeric strings → float ----------------------
+    casted = {
+        k: (float(v) if k in NUMERIC_COLS else v)
+        for k, v in raw.items()
+    }
+
+    # ---- 2. wrap in DataFrame --------------------------------
+    df = pd.DataFrame([casted])
+
+    print("Received data:", df)
+
+    # ---- 2.1. apply dict vectorizer ----------------------
+    X_predict = dv.transform(df)
+
+    # ---- 2.5. check for missing values (future implementation) -----------------------
+
+    # ---- 3. predict ------------------------------------------
+    proba_pass = float(model.predict(X)[0,1])
+    #proba_pass = float(model.predict_proba(df)[0, 1])    # col 1 = pass
+    label      = "Likely to pass" if proba_pass >= 0.5 else "Likely to fail"
+
+    # ---- 4. respond ------------------------------------------
+    return jsonify(probability=round(proba_pass, 3), label=label)
 
 
 @app.route("/features", methods=["GET"])
-def features():
-    schema = [
-        {"name": "age", "kind": "numeric", "min": 15, "max": 22},
-        {"name": "sex", "kind": "categorical",
-         "choices": ["F", "M"]},
-        {"name": "address", "kind": "categorical",
-         "choices": ["U", "R"]},
-        # …
-        {"name": "traveltime", "kind": "categorical",
-         "choices": [1, 2, 3, 4]},
-        {"name": "studytime",  "kind": "categorical",
-         "choices": [1, 2, 3, 4]},
-        {"name": "failures", "kind": "numeric", "min": 0, "max": 3},
-        {"name": "absences", "kind": "numeric", "min": 0, "max": 93},
-    ]
-    return jsonify(schema)
+def get_features():
+    print(FEATURE_SCHEMA)
+    try:
+        return jsonify(FEATURE_SCHEMA)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":
