@@ -1,4 +1,4 @@
-/* ─── base + theme ─────────────────────────────────────────────── */
+/* ─── base + theme ───────────────────────────────────────────── */
 :root{
   --brand     : #0061ff;
   --brand-dark: #004ecc;
@@ -19,7 +19,7 @@ body{
   min-height:100vh;
 }
 
-/* ─── card container ──────────────────────────────────────────── */
+/* ─── card container ───────────────────────────────────────── */
 .card{
   width:100%;
   max-width:760px;
@@ -38,7 +38,17 @@ h1{
 }
 h1 span{ color:var(--brand); }
 
-/* ─── collapsible groups ──────────────────────────────────────── */
+/* ─── two-column layout inside the card ───────────────────── */
+.content{
+  display:flex;
+  gap:2rem;
+  align-items:flex-start;
+}
+@media (max-width:800px){
+  .content{ flex-direction:column; }
+}
+
+/* ─── collapsible groups (left column) ────────────────────── */
 details{
   border:1px solid #e3e8f0;
   border-radius:var(--radius);
@@ -57,10 +67,10 @@ details[open] summary{
   border-bottom:1px solid #e3e8f0;
 }
 
-/* ─── 2-column grid inside each details ───────────────────────── */
+/* grid for fields */
 .grid-2col{
   display:grid;
-  gap:1.5rem 2.5rem;         /* row 1.5rem, column 2.5rem */
+  gap:1.5rem 2.5rem;                        /* row / column gap */
   grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
 }
 .field{ display:flex; flex-direction:column; }
@@ -84,7 +94,7 @@ input:invalid,select:invalid{ border-color:#e74c3c; }
 }
 input[type=range]{ width:100%; margin-top:.4rem; }
 
-/* ─── Predict button + spinner ───────────────────────────────── */
+/* buttons */
 .btn{
   align-self:center;
   margin-top:1rem;
@@ -105,35 +115,61 @@ input[type=range]{ width:100%; margin-top:.4rem; }
 .btn:hover{ background:var(--brand-dark); box-shadow:0 6px 18px rgba(0,78,204,.35);}
 .btn:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; }
 
-/* spinner circle */
+.btn-row{ display:flex; justify-content:center; gap:1rem; }
+.btn-secondary{ background:#e6e8ee; color:#333; }
+.btn-secondary:hover{ background:#d4d7df; }
+
+/* spinner */
 .spinner{
-  width:1.1rem;
-  height:1.1rem;
+  width:1.1rem; height:1.1rem;
   border:3px solid rgba(255,255,255,.4);
   border-top-color:#fff;
   border-radius:50%;
-  animation:spin 0.8s linear infinite;
+  animation:spin .8s linear infinite;
 }
 @keyframes spin{ to{ transform:rotate(360deg);} }
-.hidden{ display:none; }
+.hidden{ display:none !important; }
 
-/* ─── result panel ───────────────────────────────────────────── */
-.result{
+/* ─── summary panel (right column) ─────────────────────────── */
+.summary-wrap{
+  width:280px;
+  flex-shrink:0;
+  background:#fafbff;
+  border:1px solid #e4e9f2;
+  border-radius:var(--radius);
+  padding:1.2rem 1.4rem;
+  box-shadow:var(--shadow);
+}
+.summary-wrap h2{
+  font-size:1.1rem;
+  margin:0 0 .8rem 0;
+  color:#333;
+}
+.summary-data{
+  font-size:.88rem;
+  line-height:1.45;
+  margin-bottom:1rem;
+  max-height:350px;
+  overflow:auto;
+}
+.summary-data ul{ margin:0; padding:0 0 0 1rem; }
+.summary-data li{ margin:.15rem 0; }
+
+.summary-result{
+  padding:.9rem 1rem;
   background:#eef4ff;
   border-left:4px solid var(--brand);
-  padding:1rem 1.2rem;
   border-radius:var(--radius);
-  font-family:monospace;
-  white-space:pre-wrap;
-  transition:transform .3s ease, opacity .3s ease;
 }
-.result.hidden{
-  transform:translateY(10px);
-  opacity:0;
-  pointer-events:none;
+.prob-label{ font-weight:600; margin:0 0 .4rem; }
+.prob-bar{
+  height:10px;
+  border-radius:6px;
+  background:linear-gradient(
+    90deg,var(--brand) var(--p)%,#dadee6 var(--p)%);
 }
 
-/* ─── footer ─────────────────────────────────────────────────── */
+/* ─── footer ──────────────────────────────────────────────── */
 footer{
   margin-top:1.5rem;
   font-size:.8rem;

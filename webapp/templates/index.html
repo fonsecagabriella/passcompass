@@ -8,28 +8,55 @@
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
+  <!-- main stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
   <main class="card">
+
     <h1><span>PassCompass</span> — Pass / Fail Predictor</h1>
 
-    <!-- form groups inserted by JS -->
-    <form id="form"></form>
+    <!-- two-column layout: form (left) + summary (right) -->
+    <div class="content">
 
-    <button type="submit" form="form" id="predictBtn" class="btn">
-      <span class="btn-label">Predict</span>
-      <span class="spinner hidden"></span>
-    </button>
+      <!-- ───────────────── FORM COLUMN ────────────────── -->
+      <div class="form-wrap">
+        <form id="form"></form>
 
-    <section id="out" class="result hidden"></section>
+        <!-- buttons -->
+        <div class="btn-row">
+          <button type="button" id="randomBtn" class="btn btn-secondary">
+            Random values
+          </button>
+
+          <button type="button" id="clearBtn" class="btn btn-secondary">
+            Clear form
+          </button>
+
+          <button type="submit" form="form" id="predictBtn" class="btn">
+            <span class="btn-label">Predict</span>
+            <span class="spinner hidden"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ───────────────── SUMMARY COLUMN ──────────────── -->
+      <aside class="summary-wrap hidden" id="summaryWrap">
+        <h2>Student summary</h2>
+        <div id="summary-data"   class="summary-data"></div>
+        <div id="summary-result" class="summary-result"></div>
+      </aside>
+
+    </div><!-- /.content -->
+
   </main>
 
   <footer>
     Built with ❤️ and MLflow
   </footer>
 
+  <!-- main bundle -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

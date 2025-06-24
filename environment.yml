@@ -30,6 +30,6 @@ dependencies:
   - pip:
       - mlflow==2.22.1
       - prefect>=2.19
-      - evidently>=0.5
+      - evidently==0.7.7
       - "prefect>=2.2"  
     
