@@ -12,6 +12,7 @@
 - Evidently: monitor after new data is uploaded
 - Evidently: Version control – baseline JSON locks column types; regenerate if your feature list changes.
 - Evidently: alert if drift > threshold
+- Evidently: good tutorial: https://medium.com/@elmahfoudradwane/a-comprehensive-guide-to-mlflow-for-data-scientists-real-world-applications-and-examples-d4a2a32dda22
 
 - All: rename your pass flag to avoid clash with Python
 keyword (students["target"] = students["pass"]
