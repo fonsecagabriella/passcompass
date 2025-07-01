@@ -42,7 +42,7 @@ def train_randforest_flow(
         search_space,
         X_train, y_train, X_val, y_val,
         dv,
-        experiment_name="passcompass",
+        experiment_name="passcompass_training",
         tag_name="rf",              # every run gets tag model=rf
         acc_min=acc_min,
         max_evals=MAX_EVALS,

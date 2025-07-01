@@ -32,7 +32,7 @@ def train_logreg_flow(
         search_space,
         X_train, y_train, X_val, y_val,
         dv,
-        experiment_name="passcompass",
+        experiment_name="passcompass_training",
         tag_name="logreg",
         #tags={"model": "logreg"},
         acc_min=acc_min,

@@ -116,8 +116,7 @@ def run_hpo(
             # --------  log feature schema  ---------------------------------------
             #from collections import defaultdict
 
-
-            mlflow.log_dict(schema, "feature_schema.json")     # <- real artifact
+            mlflow.log_dict(schema, "model/feature_schema.json") # <- real artifact
             mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / 
 
             mlflow.log_artifact(joblib.dump(dv, "/tmp/dv.pkl")[0], "dv.pkl")
