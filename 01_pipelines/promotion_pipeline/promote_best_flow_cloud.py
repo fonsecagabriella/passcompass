@@ -22,6 +22,7 @@ from google.cloud import storage
 BUCKET_NAME = os.getenv("MODEL_BUCKET", "passcompass-ml-bucket")
 PREFIX      = "model"          # gs://bucket/model/…
 MLFLOW_URI  = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
+EXPERIMENT   = os.getenv("MLFLOW_EXPERIMENT", "passcompass_mlops")
 
 # ─────────────────────── Helper functions ─────────────────────────
 def _find_model_subdir(client: MlflowClient, run_id: str) -> str:
@@ -139,7 +140,7 @@ def upload_artifacts_to_gcs(
 # ───────────────────────────── Flow ────────────────────────────────
 @flow(name="promote_best_model")
 def promote_best_model_flow(
-    experiment: str = "passcompass",
+    experiment: str = "passcompass_mlops",
     metric: str = "val_macro_avg_f1-score",
     higher_is_better: bool = True,
     model_name: Optional[str] = None,
@@ -156,4 +157,4 @@ def promote_best_model_flow(
 
 # ────────────────────────── CLI entry ──────────────────────────────
 if __name__ == "__main__":
-    promote_best_model_flow()
+    promote_best_model_flow(experiment=EXPERIMENT)

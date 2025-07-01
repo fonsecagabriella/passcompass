@@ -7,6 +7,9 @@ dependencies:
   - python=3.10
   - pip
 
+  # cloud
+  - google-cloud-storage # for GCP storage access
+
   # Jupyter
   - jupyterlab>=4.0
 

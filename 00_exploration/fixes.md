@@ -1,3 +1,24 @@
+🚀 Summary of Action Items (in priority order)
+✅ Containerize and deploy your model (Cloud Run or Docker locally)
+
+✅ Add requirements.txt, full README.md, dataset link
+
+✅ Add a monitoring trigger or alert simulation
+
+✅ Deploy or register orchestration (Prefect/Airflow)
+
+✅ Add Makefile, CI/CD, pre-commit, linter
+
+✅ Add at least 1 unit and 1 integration test
+
+the project current only **exports the model** to the cloud.
+
+
+
+
+- ensure all files are reading .env and prepare that for when sending to cloud
+- cloud: upload data to cloud and read data from cloud function (training)
+- unify promote best cloud and promote best local
 - prefect flow: use tags for comparing models
     - now tags with a dictionary for value doesn't work
 - prefect flow: implement triggers for when new data, run new training

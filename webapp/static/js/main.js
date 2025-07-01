@@ -4,8 +4,7 @@
  * 2. Random × Clear × Predict handlers
  * 3. Validation: alert missing fields
  * 4. Summary panel with chosen values + probability bar
- *
- * Author: ChatGPT facelift 2025-06-23
+ *3
  *───────────────────────────────────────────────────────────────────*/
 
 /* ── field & choice labels (unchanged, trimmed) ───────────────── */
@@ -183,13 +182,18 @@ function makeSummary(payload){
   }).join("");
   summaryData.innerHTML=`<ul>${liHTML}</ul>`;
 }
+
 function makeResult(prob){
-  const p = Math.round(prob*100);
-  const label = p>=50 ? "Likely to pass" : "Likely to fail";
-  summaryRes.innerHTML=`
-    <p class="prob-label">${label}</p>
-    <div class="prob-bar" style="--p:${p}"></div>
-    <p style="margin-top:.4rem;font-size:.85rem;">Probability: ${p}%</p>`;
+  const p = Math.round(prob * 100);
+  const isPass = p >= 50;
+
+  /* assign pass / fail class to wrapper */
+  summaryRes.className = `summary-result ${isPass ? "prob-pass" : "prob-fail"}`;
+
+  summaryRes.innerHTML = `
+    <p class="prob-label">${isPass ? "Likely to pass" : "Likely to fail"}</p>`;
+    /*<div class="prob-bar" style="--p:${p}%"></div>
+    <p style="margin-top:.4rem;font-size:.85rem;">Probability: ${p}%</p>`;*/
 }
 
 /* ── SUBMIT handler with validation + spinner + summary ────── */

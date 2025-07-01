@@ -5,6 +5,8 @@ import mlflow
 from mlflow.tracking import MlflowClient
 from prefect import flow, task, get_run_logger
 
+EXPERIMENT   = os.getenv("MLFLOW_EXPERIMENT", "passcompass_mlops")
+print(f"Using experiment: {EXPERIMENT}")
 
 @task
 def pick_and_register_best(
@@ -24,8 +26,11 @@ def pick_and_register_best(
     if exp is None:
         log.error(f"Experiment '{experiment}' not found.")
         return None
+    
+    print(f"Using experiment: {exp.name} (ID: {exp.experiment_id})")
 
     runs = client.search_runs(experiment_ids=[exp.experiment_id])
+    
     if not runs:
         log.warning("No runs found.")
         return None
@@ -80,4 +85,4 @@ def promote_best_model_flow(
 
 
 if __name__ == "__main__":
-    promote_best_model_flow()
+    promote_best_model_flow(experiment=EXPERIMENT)

@@ -5,10 +5,8 @@ from hyperopt.pyll.base import scope
 
 from sklearn.ensemble import RandomForestClassifier
 
-from data_tasks import latest_dataset, load_data, vectorize
+from data_tasks import latest_dataset, load_data, vectorize, _resolve_data_uri
 from train_utils import run_hpo
-
-
 
 ACC_MIN   = 0.78        # or import from constants
 MAX_EVALS = 30
@@ -42,7 +40,7 @@ def train_randforest_flow(
         search_space,
         X_train, y_train, X_val, y_val,
         dv,
-        experiment_name="passcompass_training",
+        experiment_name="passcompass_mlops",
         tag_name="rf",              # every run gets tag model=rf
         acc_min=acc_min,
         max_evals=MAX_EVALS,
@@ -52,4 +50,5 @@ def train_randforest_flow(
 
 
 if __name__ == "__main__":
-    train_randforest_flow()
+    data_uri = _resolve_data_uri()
+    train_randforest_flow(base_data_dir=data_uri)

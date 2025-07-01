@@ -4,6 +4,33 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.model_selection import train_test_split
 from prefect import task
 
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
+
+# Resolve data location based on ENVIRONMENT
+ENVIRONMENT   = os.getenv("ENVIRONMENT", "local").lower()
+LOCAL_DATA_URI = os.getenv("LOCAL_DATA_URI", "data/passcompass/")
+GCS_DATA_URI   = os.getenv("GCS_DATA_URI", "gs://passcompass-ml-bucket/raw/")
+
+# ─── you will overwrite this from Prefect CLI or env var ──────────────
+ACC_MIN = 0.78          #  ←  set later!
+MAX_EVALS = 25
+# ----------------------------------------------------------------------
+
+def _resolve_data_uri() -> str:
+    if ENVIRONMENT == "local":
+        print(f"Using local data URI: {LOCAL_DATA_URI}")
+        return LOCAL_DATA_URI
+    elif ENVIRONMENT == "gcs":
+        print(f"Using GCS data URI: {GCS_DATA_URI}")
+        return GCS_DATA_URI
+    else:
+        raise ValueError(f"Unsupported ENVIRONMENT '{ENVIRONMENT}'")
+
+
 @task
 def load_data(path: str | Path):
     return pd.read_parquet(path)

@@ -2,19 +2,22 @@ from prefect import flow
 from hyperopt import hp
 
 from sklearn.linear_model import LogisticRegression
-from data_tasks import load_data, vectorize, latest_dataset
+from data_tasks import load_data, vectorize, latest_dataset, _resolve_data_uri
 from train_utils import run_hpo
+
 
 # ─── you will overwrite this from Prefect CLI or env var ──────────────
 ACC_MIN = 0.78          #  ←  set later!
 MAX_EVALS = 25
 # ----------------------------------------------------------------------
 
+
 @flow(name="train_logreg_flow")
 def train_logreg_flow(
     base_data_dir: str = "data/passcompass",
     acc_min: float = ACC_MIN,
 ):
+
     data_path = latest_dataset(base_data_dir)
     df = load_data(data_path)
     X_train, X_val, y_train, y_val, dv, schema = vectorize(df)
@@ -32,7 +35,7 @@ def train_logreg_flow(
         search_space,
         X_train, y_train, X_val, y_val,
         dv,
-        experiment_name="passcompass_training",
+        experiment_name="passcompass_mlops",
         tag_name="logreg",
         #tags={"model": "logreg"},
         acc_min=acc_min,
@@ -43,4 +46,5 @@ def train_logreg_flow(
 
 
 if __name__ == "__main__":
-    train_logreg_flow()
+    data_uri = _resolve_data_uri()
+    train_logreg_flow(base_data_dir=data_uri)

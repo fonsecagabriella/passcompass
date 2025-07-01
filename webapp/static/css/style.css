@@ -4,6 +4,8 @@
   --brand-dark: #004ecc;
   --bg        : #f4f7fb;
   --card      : #ffffff;
+  --green : #28a745;
+  --red   : #e74c3c;
   --shadow    : 0 8px 24px rgba(0,0,0,.06);
   --radius    : 12px;
   font-size   : 16px;
@@ -165,8 +167,7 @@ input[type=range]{ width:100%; margin-top:.4rem; }
 .prob-bar{
   height:10px;
   border-radius:6px;
-  background:linear-gradient(
-    90deg,var(--brand) var(--p)%,#dadee6 var(--p)%);
+  background: linear-gradient(90deg, var(--brand) var(--p), #dadee6 var(--p));
 }
 
 /* ─── footer ──────────────────────────────────────────────── */
@@ -175,4 +176,24 @@ footer{
   font-size:.8rem;
   color:#6b778c;
   text-align:center;
+}
+
+/* wrapper when prediction ≥ 50 % */
+.prob-pass{
+  background:#e8f9f0;
+  border-left:4px solid var(--green);
+}
+.prob-pass .prob-label{ color:var(--green); }
+.prob-pass .prob-bar{
+  background:linear-gradient(90deg,var(--green) var(--p),#dadee6 var(--p));
+}
+
+/* wrapper when prediction < 50 % */
+.prob-fail{
+  background:#fff4f4;
+  border-left:4px solid var(--red);
+}
+.prob-fail .prob-label{ color:var(--red); }
+.prob-fail .prob-bar{
+  background:linear-gradient(90deg,var(--red) var(--p),#dadee6 var(--p));
 }

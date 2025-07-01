@@ -119,7 +119,9 @@ def run_hpo(
             mlflow.log_dict(schema, "model/feature_schema.json") # <- real artifact
             mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / 
 
-            mlflow.log_artifact(joblib.dump(dv, "/tmp/dv.pkl")[0], "dv.pkl")
+
+            # --------  log DictVectorizer    -------------------------------
+            mlflow.log_artifact(joblib.dump(dv, "/tmp/dv.pkl")[0], "model/dv.pkl")
 
 
             #mlflow.log_dict(feature_list, "feature_list.json")
