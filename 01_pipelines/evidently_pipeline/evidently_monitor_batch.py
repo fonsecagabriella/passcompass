@@ -109,9 +109,11 @@ def save_report(snapshot, out_dir: Path) -> tuple[Path | None, Path | None]:
     # ---------- HTML ----------
     try:
         if hasattr(snapshot, "save_html"):
-            snapshot.save_html(html_p)                 # might be a no-op
-        if not html_p.exists():                       # fallback
-            html_p.write_text(snapshot.html(), encoding="utf-8")  # type: ignore[attr-defined]
+            # try the file-writing path first
+            snapshot.save_html(html_p)
+        if not html_p.exists():                       # if still missing …
+            html_str = snapshot.save_html()           # … get the HTML string …
+            html_p.write_text(html_str, encoding="utf-8")  # … and save it ourselves
         html_ok = html_p.exists()
     except Exception as exc:
         print(f"⚠️  HTML export failed: {exc}")
