@@ -199,4 +199,4 @@ cython_debug/
 
 
 # Terraform
-/.terraform
+infra/.terraform/
