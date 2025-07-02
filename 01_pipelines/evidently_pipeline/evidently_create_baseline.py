@@ -135,8 +135,17 @@ def baseline_flow(
     snapshot = build_snapshot(ref)
     save_report(snapshot, out_dir)
 
+        # bucket_name = "passcompass-ml-bucket"
+        # ENVIRONMENT = "gcs"
+    
+    # if ENVIRONMENT == "gcs" and bucket_name:
     if os.getenv("ENVIRONMENT", "local").lower() == "gcs" and bucket_name:
-        upload_to_gcs(ref_path, bucket_name, f"reference/{ref_path.name}")
+
+        upload_to_gcs(ref_path, bucket_name, f"evidently/reference/{ref_path.name}")
+        upload_to_gcs(out_dir/"evidently_baseline.html", bucket_name, "evidently/reports/evidently_baseline.html")
+        upload_to_gcs(out_dir/"evidently_baseline.json", bucket_name, "evidently/reports/evidently_baseline.json")
+
+        print(f"✅ Reference parquet uploaded to gs://{bucket_name}/evidently/reference/{ref_path.name}")
 
     return snapshot
 
