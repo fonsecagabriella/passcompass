@@ -62,7 +62,7 @@ def pick_and_register_best(
 
 
 @flow(name="promote_best_model")
-def promote_best_model_flow(
+def promote_best_model_flow_local(
     experiment: str = "passcompass",
     metric: str = "val_macro_avg_f1-score",
     higher_is_better: bool = True,

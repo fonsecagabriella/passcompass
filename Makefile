@@ -7,14 +7,22 @@ env-update:
 
 # ====== MLFLOW ======
 mlflow-ui:
-	mlflow ui --config-file conf/mlflow_local.yaml
+	mlflow server \
+  --backend-store-uri sqlite:///mlflow.db \
+  --default-artifact-root file:./artifacts \
+  --serve-artifacts \
+  --host 127.0.0.1 \
+  --port 5001
 
 # ====== FLOW ======
 run-flow:
-	python 01_pipeline/prefect_flow.py
+	python 01_pipelines/prefect_flow.py
 
-train-only:
-	python 01_pipeline/train.py
+extract-flow:
+	python 01_pipelines/00_extract_flow.py
+
+train-promote-flow:
+	python 01_pipelines/01_train_promote_flow.py
 
 # ---- WEB APP ----
 webapp-dev:

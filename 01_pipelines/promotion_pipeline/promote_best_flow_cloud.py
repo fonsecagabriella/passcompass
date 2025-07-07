@@ -139,7 +139,7 @@ def upload_artifacts_to_gcs(
 
 # ───────────────────────────── Flow ────────────────────────────────
 @flow(name="promote_best_model")
-def promote_best_model_flow(
+def promote_best_model_flow_gcs(
     experiment: str = "passcompass_mlops",
     metric: str = "val_macro_avg_f1-score",
     higher_is_better: bool = True,

@@ -5,8 +5,8 @@ from hyperopt.pyll.base import scope
 
 from sklearn.ensemble import RandomForestClassifier
 
-from data_tasks import latest_dataset, load_data, vectorize, _resolve_data_uri
-from train_utils import run_hpo
+from .data_tasks import latest_dataset, load_data, vectorize, _resolve_data_uri
+from .train_utils import run_hpo
 
 ACC_MIN   = 0.78        # or import from constants
 MAX_EVALS = 30

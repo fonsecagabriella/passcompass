@@ -2,8 +2,8 @@ from prefect import flow
 from hyperopt import hp
 
 from sklearn.linear_model import LogisticRegression
-from data_tasks import load_data, vectorize, latest_dataset, _resolve_data_uri
-from train_utils import run_hpo
+from .data_tasks import load_data, vectorize, latest_dataset, _resolve_data_uri
+from .train_utils import run_hpo
 
 
 # ─── you will overwrite this from Prefect CLI or env var ──────────────
