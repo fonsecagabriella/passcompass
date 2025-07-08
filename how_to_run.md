@@ -5,6 +5,8 @@ This guide outlines how to set up and run the project from scratch. The setup in
 
 ## Folder structure
 
+```
+
 PASSCOMPASS/
 │
 ├── 00_exploration/              # notebooks to get familiar with dataset
@@ -40,7 +42,7 @@ PASSCOMPASS/
 ├── LICENSE
 └── README.md
 
-
+```
 
 ```bash
 make env-create
@@ -195,7 +197,7 @@ docker run \
 
 
 
-
+------
 
 ### 2.0 Check the services
 
@@ -212,7 +214,7 @@ From the UI, click in `models` to follow the model registry.
 
 You can access Prefect locally at `http://127.0.0.1:4200/dashboard`.
 
-
+------
 
 ### 3.0 Unit tests
 Run unit tests anytime with
@@ -250,7 +252,7 @@ For the future:
 ------
 <div id="code-format"></div>
 
- ## 5.0 Code style & quality checks
+ ### 5.0 Code style & quality checks
 
 | Tool | Role | How to run it manually |
 |------|------|------------------------|
@@ -270,7 +272,7 @@ The same checks run in CI (.github/workflows/lint.yml) to guarantee every PR sta
 
 <div id="webapp-git">
 
-## 6.0 Running the web application from latest published image
+### 6.0 Running the web application from latest published image
 
 - Pull the image
 `docker pull ghcr.io/fonsecagabriella/passcompass-web:latest`

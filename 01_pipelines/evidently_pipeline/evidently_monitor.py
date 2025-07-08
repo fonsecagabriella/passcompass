@@ -3,7 +3,6 @@ Monitor new scoring batch against baseline
 Evidently 0.7.x  •  Prefect 3.x
 """
 
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -48,7 +47,7 @@ def run_evidently(current: pd.DataFrame) -> Report:
     Works with baselines saved by Evidently ≤0.7.x or ≥0.8.
     """
     # ---------- load baseline file ----------
-    #baseline_dict = json.loads(BASELINE_JSON.read_text())
+    # baseline_dict = json.loads(BASELINE_JSON.read_text())
 
     # ---------- extract reference rows no matter the schema ----------
     # if "reference_data" in baseline_dict:  # Evidently ≤0.7.x
