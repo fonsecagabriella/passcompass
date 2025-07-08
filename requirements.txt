@@ -25,3 +25,6 @@ wheel==0.45.1
 zstandard==0.23.0
 google-cloud-storage
 pytest
+black==24.4.2			
+ruff==0.4.5			
+pytest==8.2.0
