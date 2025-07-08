@@ -20,18 +20,15 @@ import os
 from pathlib import Path
 
 import pandas as pd
-from google.cloud import storage
-from prefect import flow, task
-
 from evidently import Report
 from evidently.metrics import ValueDrift  # target‑drift metric
 from evidently.presets import DataDriftPreset
+from google.cloud import storage
+from prefect import flow, task
 
 # ────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parents[2]  # …/passcompass
-REFERENCE_PATH = (
-    PROJECT_ROOT / "data" / "passcompass" / "2025_06_10" / "train.parquet"
-)
+REFERENCE_PATH = PROJECT_ROOT / "data" / "passcompass" / "2025_06_10" / "train.parquet"
 TARGET_COL = "pass"  # 0/1 label
 OUT_DIR = PROJECT_ROOT / "reports"
 # ────────────────────────────────────────────────────────────────
@@ -135,17 +132,27 @@ def baseline_flow(
     snapshot = build_snapshot(ref)
     save_report(snapshot, out_dir)
 
-        # bucket_name = "passcompass-ml-bucket"
-        # ENVIRONMENT = "gcs"
-    
+    # bucket_name = "passcompass-ml-bucket"
+    # ENVIRONMENT = "gcs"
+
     # if ENVIRONMENT == "gcs" and bucket_name:
     if os.getenv("ENVIRONMENT", "local").lower() == "gcs" and bucket_name:
 
         upload_to_gcs(ref_path, bucket_name, f"evidently/reference/{ref_path.name}")
-        upload_to_gcs(out_dir/"evidently_baseline.html", bucket_name, "evidently/reports/evidently_baseline.html")
-        upload_to_gcs(out_dir/"evidently_baseline.json", bucket_name, "evidently/reports/evidently_baseline.json")
+        upload_to_gcs(
+            out_dir / "evidently_baseline.html",
+            bucket_name,
+            "evidently/reports/evidently_baseline.html",
+        )
+        upload_to_gcs(
+            out_dir / "evidently_baseline.json",
+            bucket_name,
+            "evidently/reports/evidently_baseline.json",
+        )
 
-        print(f"✅ Reference parquet uploaded to gs://{bucket_name}/evidently/reference/{ref_path.name}")
+        print(
+            f"✅ Reference parquet uploaded to gs://{bucket_name}/evidently/reference/{ref_path.name}"
+        )
 
     return snapshot
 

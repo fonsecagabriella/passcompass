@@ -37,18 +37,15 @@ Requires Evidently ≥ 0.7.
 from __future__ import annotations
 
 import datetime as dt
-import json
 import os
 from pathlib import Path
-from typing import Optional, Tuple
 
 import pandas as pd
-from google.cloud import storage
-from prefect import flow, task
-
 from evidently import Report
 from evidently.metrics import ValueDrift
 from evidently.presets import DataDriftPreset
+from google.cloud import storage
+from prefect import flow, task
 
 # ────────────────────────────────────────────────────────────────
 # Configuration – tweak paths as needed
@@ -64,7 +61,7 @@ REPORTS_ROOT = PROJECT_ROOT / "reports" / "drift"
 # ────────────────────────────────────────────────────────────────
 
 
-def _split_gs_uri(uri: str) -> Tuple[str, str]:
+def _split_gs_uri(uri: str) -> tuple[str, str]:
     """Return (bucket_name, prefix) for ``<bucket>`` or ``gs://bucket/prefix``."""
     if uri.startswith("gs://"):
         bucket, *rest = uri[5:].split("/", 1)
@@ -102,8 +99,8 @@ def build_snapshot(ref: pd.DataFrame, cur: pd.DataFrame):
 @task
 def save_report(snapshot, out_dir: Path) -> tuple[Path | None, Path | None]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    html_p  = out_dir / "drift_report.html"
-    json_p  = out_dir / "drift_report.json"
+    html_p = out_dir / "drift_report.html"
+    json_p = out_dir / "drift_report.json"
     html_ok = json_ok = False
 
     # ---------- HTML ----------
@@ -111,8 +108,8 @@ def save_report(snapshot, out_dir: Path) -> tuple[Path | None, Path | None]:
         if hasattr(snapshot, "save_html"):
             # try the file-writing path first
             snapshot.save_html(html_p)
-        if not html_p.exists():                       # if still missing …
-            html_str = snapshot.save_html()           # … get the HTML string …
+        if not html_p.exists():  # if still missing …
+            html_str = snapshot.save_html()  # … get the HTML string …
             html_p.write_text(html_str, encoding="utf-8")  # … and save it ourselves
         html_ok = html_p.exists()
     except Exception as exc:
@@ -121,10 +118,11 @@ def save_report(snapshot, out_dir: Path) -> tuple[Path | None, Path | None]:
     # ---------- JSON ----------
     try:
         if hasattr(snapshot, "save_json"):
-            snapshot.save_json(json_p)                # might be a no-op
-        if not json_p.exists():                       # fallback
+            snapshot.save_json(json_p)  # might be a no-op
+        if not json_p.exists():  # fallback
             if hasattr(snapshot, "as_dict"):
                 import json as _json
+
                 json_p.write_text(
                     _json.dumps(snapshot.as_dict(), default=str, indent=2), encoding="utf-8"  # type: ignore[attr-defined]
                 )
@@ -164,7 +162,6 @@ def upload_to_gcs(local_path: Path, bucket_uri: str, destination: str | None = N
 
 
 @flow(name="monitor_drift_batch")
-
 def monitor_flow(
     current_path: Path,
     reference_path: Path = REFERENCE_PATH,
@@ -194,7 +191,9 @@ if __name__ == "__main__":
     import argparse
 
     p = argparse.ArgumentParser()
-    p.add_argument("--current-path", type=Path, required=True, help="Parquet file with today's data slice")
+    p.add_argument(
+        "--current-path", type=Path, required=True, help="Parquet file with today's data slice"
+    )
     args = p.parse_args()
 
     monitor_flow(current_path=args.current_path)

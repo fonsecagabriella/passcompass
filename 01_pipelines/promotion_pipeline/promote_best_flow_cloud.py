@@ -7,22 +7,23 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
 import os
 import shutil
 import tempfile
+from pathlib import Path
 
 import mlflow
-from mlflow.tracking import MlflowClient
-from prefect import flow, task, get_run_logger
 from google.cloud import storage
+from mlflow.tracking import MlflowClient
+from prefect import flow, get_run_logger, task
 
 # ───────────────────────── Configuration ──────────────────────────
 BUCKET_NAME = os.getenv("MODEL_BUCKET", "passcompass-ml-bucket")
-PREFIX      = "model"          # gs://bucket/model/…
-MLFLOW_URI  = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
-EXPERIMENT   = os.getenv("MLFLOW_EXPERIMENT", "passcompass_mlops")
+PREFIX = "model"  # gs://bucket/model/…
+MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
+EXPERIMENT = os.getenv("MLFLOW_EXPERIMENT", "passcompass_mlops")
+ALIAS = os.getenv("MODEL_ALIAS", "best_202506")  # Default alias for the model
+
 
 # ─────────────────────── Helper functions ─────────────────────────
 def _find_model_subdir(client: MlflowClient, run_id: str) -> str:
@@ -55,13 +56,15 @@ def _upload_dir_to_gcs(local_dir: str, bucket: str, prefix: str) -> None:
             blob = bucket_ref.blob(f"{prefix}/{rel_path}")
             blob.upload_from_filename(fp)
 
+
 # ──────────────────────────── Tasks ───────────────────────────────
 @task
 def pick_and_register_best(
     experiment: str,
     metric: str,
     higher_is_better: bool,
-    model_name: Optional[str],
+    model_name: str | None,
+    alias: ALIAS,
 ) -> tuple[int, str, str]:
     """
     • Pick best run by `metric`
@@ -94,11 +97,10 @@ def pick_and_register_best(
         model_name = f"passcompass_{t}"
 
     mv = mlflow.register_model(f"runs:/{best_run.info.run_id}/model", model_name)
-    client.transition_model_version_stage(
+    client.set_registered_model_alias(
         name=model_name,
+        alias=alias,
         version=mv.version,
-        stage="Staging",
-        archive_existing_versions=True,
     )
     log.info(f"Model {model_name} v{mv.version} promoted to STAGING")
     return mv.version, best_run.info.run_id, model_name
@@ -137,23 +139,23 @@ def upload_artifacts_to_gcs(
 
     shutil.rmtree(tmp_dir, ignore_errors=True)
 
+
 # ───────────────────────────── Flow ────────────────────────────────
 @flow(name="promote_best_model")
 def promote_best_model_flow_gcs(
     experiment: str = "passcompass_mlops",
     metric: str = "val_macro_avg_f1-score",
     higher_is_better: bool = True,
-    model_name: Optional[str] = None,
+    model_name: str | None = None,
 ):
     """
     Promote the best run & push its artifact directory to GCS
     (raw, unzipped layout).
     """
-    ver, run_id, name = pick_and_register_best(
-        experiment, metric, higher_is_better, model_name
-    )
+    ver, run_id, name = pick_and_register_best(experiment, metric, higher_is_better, model_name)
     upload_artifacts_to_gcs(run_id, name, ver)
     get_run_logger().info(f"✅ Promotion complete — version {ver}")
+
 
 # ────────────────────────── CLI entry ──────────────────────────────
 if __name__ == "__main__":

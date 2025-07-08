@@ -1,10 +1,9 @@
 import mlflow
-from mlflow.models import Model
 
 mlflow.set_tracking_uri("http://127.0.0.1:5001")
 
 
-logged_model = 'runs:/ab8b0be1b1b84e12b33782a91057236e/model'
+logged_model = "runs:/ab8b0be1b1b84e12b33782a91057236e/model"
 
 # Load model as a PyFuncModel.
 loaded_model = mlflow.pyfunc.load_model(logged_model)
@@ -23,4 +22,3 @@ with open(metrics_path) as f:
     metrics = json.load(f)
 
 print(metrics)
-

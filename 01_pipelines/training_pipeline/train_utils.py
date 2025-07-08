@@ -1,16 +1,16 @@
 import json
-import mlflow
 import os
-import numpy as np
-from hyperopt import fmin, tpe, Trials, STATUS_OK
-from sklearn.metrics import accuracy_score, recall_score
-from sklearn.pipeline import Pipeline
+
 import joblib
+import mlflow
+import numpy as np
+from hyperopt import STATUS_OK, Trials, fmin, tpe
+from sklearn.metrics import accuracy_score, recall_score
 
 from passcompass_utils.metrics import (
     log_classification_report,
-    evaluate_and_log,
 )
+
 
 def ensure_experiment(name: str = "MLflow-training"):
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001"))
@@ -18,7 +18,6 @@ def ensure_experiment(name: str = "MLflow-training"):
     if exp is None:
         mlflow.create_experiment(name)
     mlflow.set_experiment(name)
-
 
 
 def _best_threshold(y_true, prob_fail, acc_min):
@@ -31,9 +30,9 @@ def _best_threshold(y_true, prob_fail, acc_min):
 
     for thr in thresholds:
         # predict label 0 ("fail") if prob_fail >= thr, else 1 ("pass")
-        y_pred = (prob_fail >= thr).astype(int)          # 1 if True else 0
-        y_pred = 1 - y_pred                              # invert → 0=fail,1=pass
-        acc  = accuracy_score(y_true, y_pred)
+        y_pred = (prob_fail >= thr).astype(int)  # 1 if True else 0
+        y_pred = 1 - y_pred  # invert → 0=fail,1=pass
+        acc = accuracy_score(y_true, y_pred)
         rec0 = recall_score(y_true, y_pred, pos_label=0)
 
         if acc >= acc_min and rec0 > best_rec:
@@ -52,10 +51,10 @@ def run_hpo(
     dv,
     experiment_name: "MLflow-training",
     tag_name: str,
-    acc_min: float,                   # <-- external variable
+    acc_min: float,  # <-- external variable
     max_evals: int = 30,
     random_state=None,
-    schema=None,                      # <- optional feature schema
+    schema=None,  # <- optional feature schema
 ):
     """
     One Hyperopt loop that   (i) tunes hyper-parameters,
@@ -63,7 +62,7 @@ def run_hpo(
     (iii) logs only models whose tuned accuracy >= acc_min.
     """
     ensure_experiment(experiment_name)
-    #mlflow.set_experiment(experiment_name)
+    # mlflow.set_experiment(experiment_name)
 
     def objective(params):
 
@@ -72,12 +71,12 @@ def run_hpo(
             model = model_cls(**params)
             model.fit(X_train, y_train)
 
-            #pipe = Pipeline([
+            # pipe = Pipeline([
             #    ("dv",   dv),
             #    ("clf",  model),
-            #])
+            # ])
 
-            #pipe.fit(X_train, y_train)
+            # pipe.fit(X_train, y_train)
 
             # --------  probability of *fail* (label 0)
             idx_fail = list(model.classes_).index(0)
@@ -89,50 +88,46 @@ def run_hpo(
             # --------  log metrics
             mlflow.log_param("model_type", tag_name)
 
-
             # --------  log metrics
             mlflow.log_param("threshold", thr)
-            mlflow.log_metrics({
-                "val_recall_fail_tuned": rec0,
-                "val_accuracy_tuned":    acc,
-            })
+            mlflow.log_metrics(
+                {
+                    "val_recall_fail_tuned": rec0,
+                    "val_accuracy_tuned": acc,
+                }
+            )
 
             # full report (uses tuned threshold)
 
-            y_pred_tuned = (prob_fail >= thr).astype(int)   # 1 = fail, 0 = pass
-            y_pred_tuned = 1 - y_pred_tuned                # invert so 0 = fail, 1 = pass
+            y_pred_tuned = (prob_fail >= thr).astype(int)  # 1 = fail, 0 = pass
+            y_pred_tuned = 1 - y_pred_tuned  # invert so 0 = fail, 1 = pass
 
-            log_classification_report(
-                y_val, y_pred_tuned, prefix="val_"
-            )
+            log_classification_report(y_val, y_pred_tuned, prefix="val_")
 
             mlflow.log_params(params)
-            mlflow.log_param(
-                "num_features", len(dv.feature_names_)
-            )
-            #feature_list = list(dv.feature_names_)      # always a Python list
-            #mlflow.set_tag("feature_list", json.dumps(feature_list))
+            mlflow.log_param("num_features", len(dv.feature_names_))
+            # feature_list = list(dv.feature_names_)      # always a Python list
+            # mlflow.set_tag("feature_list", json.dumps(feature_list))
 
             # --------  log feature schema  ---------------------------------------
-            #from collections import defaultdict
+            # from collections import defaultdict
 
-            mlflow.log_dict(schema, "model/feature_schema.json") # <- real artifact
-            mlflow.set_tag("feature_schema", json.dumps(schema))   # backup / 
-
+            mlflow.log_dict(schema, "model/feature_schema.json")  # <- real artifact
+            mlflow.set_tag("feature_schema", json.dumps(schema))  # backup /
 
             # --------  log DictVectorizer    -------------------------------
             mlflow.log_artifact(joblib.dump(dv, "/tmp/dv.pkl")[0], "model/dv.pkl")
 
-
-            #mlflow.log_dict(feature_list, "feature_list.json")
+            # mlflow.log_dict(feature_list, "feature_list.json")
 
             # --------  optionally save the model
             if acc >= acc_min:
                 mlflow.sklearn.log_model(
-                    model, "model",
+                    model,
+                    "model",
                     input_example=X_train[:1],
                     registered_model_name=None,
-                    extra_pip_requirements=["scikit-learn"]
+                    extra_pip_requirements=["scikit-learn"],
                 )
 
             # Hyperopt tries to *minimise* → negative recall of fail class

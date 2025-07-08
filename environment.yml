@@ -30,6 +30,10 @@ dependencies:
   - PyYAML
   - pillow
   - tqdm
+  - pytest
+  - black
+  - ruff
+  - pre-commit
   - pip:
       - mlflow==2.22.1
       - prefect>=2.19

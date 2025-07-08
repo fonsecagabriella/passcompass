@@ -1,24 +1,24 @@
-from pathlib import Path
-import pandas as pd
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.model_selection import train_test_split
-from prefect import task
-
 import os
 from pathlib import Path
+
+import pandas as pd
 from dotenv import load_dotenv
+from prefect import task
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.model_selection import train_test_split
 
 load_dotenv()  # Load environment variables from .env file
 
 # Resolve data location based on ENVIRONMENT
-ENVIRONMENT   = os.getenv("ENVIRONMENT", "local").lower()
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local").lower()
 LOCAL_DATA_URI = os.getenv("LOCAL_DATA_URI", "data/passcompass/")
-GCS_DATA_URI   = os.getenv("GCS_DATA_URI", "gs://passcompass-ml-bucket/raw/")
+GCS_DATA_URI = os.getenv("GCS_DATA_URI", "gs://passcompass-ml-bucket/raw/")
 
 # ─── you will overwrite this from Prefect CLI or env var ──────────────
-ACC_MIN = 0.78          #  ←  set later!
+ACC_MIN = 0.78  #  ←  set later!
 MAX_EVALS = 25
 # ----------------------------------------------------------------------
+
 
 def _resolve_data_uri() -> str:
     if ENVIRONMENT == "local":
@@ -34,6 +34,7 @@ def _resolve_data_uri() -> str:
 @task
 def load_data(path: str | Path):
     return pd.read_parquet(path)
+
 
 @task
 def vectorize(df, target_col: str = "pass"):
@@ -53,22 +54,26 @@ def vectorize(df, target_col: str = "pass"):
 
     schema = []
     for raw_col in df.columns.drop(target_col):
-        if df[raw_col].dtype.kind in "biufc":           # numeric
-            schema.append({
-                "name": raw_col,
-                "kind": "numeric",
-                "min":  float(df[raw_col].min()),
-                "max":  float(df[raw_col].max()),
-            })
-        else:                                           # categorical
-            schema.append({
-                "name":    raw_col,
-                "kind":    "categorical",
-                "choices": sorted(df[raw_col].dropna().unique().tolist()),
-            })
-
+        if df[raw_col].dtype.kind in "biufc":  # numeric
+            schema.append(
+                {
+                    "name": raw_col,
+                    "kind": "numeric",
+                    "min": float(df[raw_col].min()),
+                    "max": float(df[raw_col].max()),
+                }
+            )
+        else:  # categorical
+            schema.append(
+                {
+                    "name": raw_col,
+                    "kind": "categorical",
+                    "choices": sorted(df[raw_col].dropna().unique().tolist()),
+                }
+            )
 
     return X_train, X_val, y_train, y_val, dv, schema
+
 
 @task
 def latest_dataset(base_dir: str = "data/passcompass") -> str:

@@ -21,22 +21,18 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+
+# import mlflow.pyfunc
+import pickle
 import tempfile
-from typing import Any, Dict, List
+from typing import Any
 
 import mlflow
-#import mlflow.pyfunc
-import pickle
-from mlflow.tracking import MlflowClient
+from dotenv import load_dotenv  # make sure you `pip install python-dotenv`
+from google.cloud import storage  # NEW
 
-from google.cloud import storage                # NEW
+load_dotenv()  # picks up .env automatically
 
-
-from dotenv import load_dotenv        # make sure you `pip install python-dotenv`
-load_dotenv()                         # picks up .env automatically
-
-import numpy as np
-import pandas as pd
 from flask import (
     Flask,
     abort,
@@ -48,16 +44,18 @@ from flask import (
 
 # ─────────────────────────── Configuration ──────────────────────────
 # Resolve data location based on ENVIRONMENT
-#ENVIRONMENT   = os.getenv("ENVIRONMENT", "local").lower()
-ENVIRONMENT   = "local"
+# ENVIRONMENT   = os.getenv("ENVIRONMENT", "local").lower()
+ENVIRONMENT = "local"
 # for local development, model lives in MLflow
-MODEL_NAME  = "passcompass_generic"
+MODEL_NAME = "passcompass_generic"
 MODEL_ALIAS = "best_202506"
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
-LOCAL_MODEL_URI = f"models:/{MODEL_NAME}@{MODEL_ALIAS}" 
-dv = None                                        # global singleton
+LOCAL_MODEL_URI = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
+dv = None  # global singleton
 # for retrieving model from GCS
-GCS_MODEL_URI   = os.getenv("GCS_MODEL_URI", "gs://passcompass-ml-bucket/model/passcompass_generic_v12")
+GCS_MODEL_URI = os.getenv(
+    "GCS_MODEL_URI", "gs://passcompass-ml-bucket/model/passcompass_generic_v12"
+)
 
 if ENVIRONMENT == "local" and not LOCAL_MODEL_URI:
     raise RuntimeError("ENVIRONMENT=local but LOCAL_MODEL_URI is not set")
@@ -65,13 +63,12 @@ if ENVIRONMENT == "gcs" and not GCS_MODEL_URI:
     raise RuntimeError("ENVIRONMENT=gcs but GCS_MODEL_URI is not set")
 
 
-
 # ─────────────────────────── Flask setup ────────────────────────────
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
 # Global (per worker) singletons
 model: mlflow.pyfunc.PyFuncModel | None = None
-schema: List[Dict[str, Any]] = []            # list of {"name":str,"kind":str,…}
+schema: list[dict[str, Any]] = []  # list of {"name":str,"kind":str,…}
 
 
 # ─────────────────────── Helpers & bootstrap ────────────────────────
@@ -85,6 +82,7 @@ def _resolve_model_uri() -> str:
         return GCS_MODEL_URI
     else:
         raise ValueError(f"Unsupported ENVIRONMENT '{ENVIRONMENT}'")
+
 
 def _download_dv(uri: str) -> str:
     """
@@ -107,15 +105,14 @@ def _download_dv(uri: str) -> str:
     # 3️⃣  GCS path(s)
     if parent.startswith("gs://"):
         bucket, key = parent[5:].split("/", 1)
-        client  = storage.Client()
-        bucket  = client.bucket(bucket)
+        client = storage.Client()
+        bucket = client.bucket(bucket)
 
-        for blob_key in (f"{key.rstrip('/')}/dv.pkl",
-                         f"{key.rstrip('/')}/dv.pkl/dv.pkl"):
+        for blob_key in (f"{key.rstrip('/')}/dv.pkl", f"{key.rstrip('/')}/dv.pkl/dv.pkl"):
             blob = bucket.blob(blob_key)
             if blob.exists():
                 tmp_dir = tempfile.mkdtemp()
-                local   = os.path.join(tmp_dir, "dv.pkl")
+                local = os.path.join(tmp_dir, "dv.pkl")
                 # make sure parent dirs exist
                 os.makedirs(os.path.dirname(local), exist_ok=True)
                 blob.download_to_filename(local)
@@ -153,6 +150,7 @@ def _download_dv(uri: str) -> str:
 #     print(f"Loading model {MODEL_NAME} v{mv.version} from run {run_id}…")
 #     return f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
 
+
 def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
     """
     Loads the MLflow model (Registry or GCS) and returns (model, schema).
@@ -172,7 +170,7 @@ def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
 
     uri = _resolve_model_uri()
     app.logger.info(f"Resolved model URI: {uri}")
- 
+
     global dv
     if dv is None:
         dv_path = _download_dv(uri)
@@ -192,9 +190,7 @@ def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
     schema_path: str | None = None
     for name in ("feature_schema.json", "features.json"):
         try:
-            schema_path = mlflow.artifacts.download_artifacts(
-                artifact_uri=f"{uri}/{name}"
-            )
+            schema_path = mlflow.artifacts.download_artifacts(artifact_uri=f"{uri}/{name}")
             if os.path.exists(schema_path):
                 break
         except Exception:
@@ -203,10 +199,9 @@ def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
     # 3️⃣ Load model itself
     model = mlflow.pyfunc.load_model(uri)
 
-
     # 4️⃣ If we found a schema file, use it
     if schema_path and os.path.exists(schema_path):
-        with open(schema_path, "r") as f:
+        with open(schema_path) as f:
             schema = json.load(f)
             print(schema)  # print model metadata
         return model, schema
@@ -226,14 +221,12 @@ def _startup_once() -> None:
     """Load model + schema exactly once per worker process."""
     global model, schema
     model, schema = _load_model_and_schema()
-    app.logger.info(
-        f"Model loaded from {ENVIRONMENT.upper()}  |  "
-        f"{len(schema)} features"
-    )
+    app.logger.info(f"Model loaded from {ENVIRONMENT.upper()}  |  " f"{len(schema)} features")
 
 
 # Eager load at module import (works for Flask dev server, gunicorn, Cloud Run)
 _startup_once()
+
 
 # ────────────────────────── Routes ───────────────────────────────────
 @app.route("/")
@@ -248,7 +241,6 @@ def features():
     return jsonify(schema)
 
 
-
 @app.post("/predict")
 def predict():
     """Score a single sample.  Expects JSON with feature names as keys."""
@@ -257,16 +249,15 @@ def predict():
 
     raw = request.get_json()
     casted = {
-        k: (float(v) if any(f["name"]==k and f["kind"]=="numeric" for f in schema) else v)
+        k: (float(v) if any(f["name"] == k and f["kind"] == "numeric" for f in schema) else v)
         for k, v in raw.items()
     }
 
     # vectorise with the DictVectorizer we loaded above
     X_vec = dv.transform([casted]).toarray()
 
-    proba_pass = float(model.predict(X_vec))          # your model outputs P(pass)
+    proba_pass = float(model.predict(X_vec))  # your model outputs P(pass)
     return jsonify(probability=round(proba_pass, 6))
-
 
 
 @app.route("/static/<path:filename>")

@@ -1,13 +1,5 @@
 # PassCompass 🧭 ✅ / DRAFT
 
-## TO DO
-- Revise makefile
-
-## DECISIONS
-
-- Check imbalance of classes
-
-
 ***MLOps Project | Spotting at-risk students before grades slip, guiding learners toward success.***
 
 This project delivers an end-to-end, monitored pipeline (data ingest → training → deployment → drift alerts) that showcases modern **MLOps practices** and creates a tool that can be adapted by real schools with only spreadsheet-level infrastructure.
@@ -16,7 +8,7 @@ This project delivers an end-to-end, monitored pipeline (data ingest → trainin
 Each semester, thousands of students silently accumulate risk factors, including poor attendance, high failure rates, and limited study time. These factors can culminate in course failure or dropping out. Most schools still rely on end-of-term grades to identify struggling students, when intervention is already too late.
 
 ## Goal
-Build a lightweight, open-source prediction service that flags students with a high probability of failing a course early in the term, so teachers, counsellors, or mentoring programmes can intervene with targeted support (extra coaching, social-emotional resources, family outreach).
+Build a lightweight, open-source prediction web service that flags students with a high probability of failing a course early in the term, so teachers, counsellors, or mentoring programmes can intervene with targeted support (extra coaching, social-emotional resources, family outreach).
 
 
 
@@ -27,7 +19,47 @@ Build a lightweight, open-source prediction service that flags students with a h
 | **Equity & inclusion**    | Low-income and first-generation learners are over-represented among repeaters. Early alerts help close attainment gaps.                                                       |
 | **Drop-out prevention**   | Each prevented failure boosts persistence rates, reducing long-term economic costs for both students and institutions.                                                        |
 | **Resource optimisation** | Schools can triage scarce tutoring budgets toward the highest-risk cohort instead of blanket remediation.                                                                     |
-| **Data transparency**     | By using an academic, publicly licensed dataset and logging every experiment, the project demonstrates *explainable*, reproducible AI rather than opaque “black-box scoring.” |
+
+## The dataset
+[UCI Student Performance](https://archive.ics.uci.edu/dataset/320/student%2Bperformance)
+
+Collected via questionnaires and school reports at two Portuguese secondary schools, this dataset captures socioeconomic, family and study-habit factors alongside three period grades (G1–G3) for 649 students in Mathematics and Portuguese language. It has become a staple benchmark for early-warning systems in education because it is small, tidy and publicly licensed, yet rich enough to test fairness and feature-drift monitoring strategies. They convert the final grade G3 into a binary pass (≥ 10) / fail target to align with real-world intervention workflows.
+
+### Schema
+
+| Raw column   | Suggested UI label               | Optional help / tooltip                       |             |             |             |             |
+| ------------ | -------------------------------- | --------------------------------------------- | ----------- | ----------- | ----------- | ----------- |
+| `school`     | **School**                       | GP = Gabriel Pereira · MS = Mousinho Silveira |             |             |             |             |
+| `course`     | **Course**                       | Math or Portuguese                            |             |             |             |             |
+| `sex`        | **Gender**                       | F = Female · M = Male                         |             |             |             |             |
+| `age`        | **Age (years)**                  | Integer 15 – 22                               |             |             |             |             |
+| `address`    | **Home address**                 | U = Urban · R = Rural                         |             |             |             |             |
+| `famsize`    | **Family size**                  | LE3 = ≤ 3 · GT3 = > 3                         |             |             |             |             |
+| `Pstatus`    | **Parents’ cohabitation**        | T = Together · A = Apart                      |             |             |             |             |
+| `Medu`       | **Mother’s education level**     | 0 None                                        | 1 Primary   | 2 5-9 yrs   | 3 Secondary | 4 Higher Ed |
+| `Fedu`       | **Father’s education level**     | Same scale as above                           |             |             |             |             |
+| `Mjob`       | **Mother’s job**                 | Teacher, Health, Services, etc.               |             |             |             |             |
+| `Fjob`       | **Father’s job**                 | —                                             |             |             |             |             |
+| `reason`     | **Reason for choosing school**   | Close to home, Reputation, Course, Other      |             |             |             |             |
+| `guardian`   | **Primary guardian**             | Mother, Father, Other                         |             |             |             |             |
+| `traveltime` | **Daily travel time to school**  | 1 < 15 min                                    | 2 15-30 min | 3 30-60 min | 4 > 1 h     |             |
+| `studytime`  | **Weekly study time**            | 1 < 2 h                                       | 2 2-5 h     | 3 5-10 h    | 4 > 10 h    |             |
+| `failures`   | **Past class failures**          | 0 – 3 +                                       |             |             |             |             |
+| `schoolsup`  | **Extra school support**         | Yes / No                                      |             |             |             |             |
+| `famsup`     | **Family study support**         | Yes / No                                      |             |             |             |             |
+| `paid`       | **Paid extra classes**           | Yes / No                                      |             |             |             |             |
+| `activities` | **Extracurricular activities**   | Yes / No                                      |             |             |             |             |
+| `nursery`    | **Attended nursery school**      | Yes / No                                      |             |             |             |             |
+| `higher`     | **Wants higher education**       | Yes / No                                      |             |             |             |             |
+| `internet`   | **Internet at home**             | Yes / No                                      |             |             |             |             |
+| `romantic`   | **In a romantic relationship**   | Yes / No                                      |             |             |             |             |
+| `famrel`     | **Family relationship quality**  | 1 Poor – 5 Excellent                          |             |             |             |             |
+| `freetime`   | **Free time after school**       | 1 Very low – 5 Very high                      |             |             |             |             |
+| `goout`      | **Going-out frequency**          | 1 Rarely – 5 Daily                            |             |             |             |             |
+| `Dalc`       | **Week-day alcohol consumption** | 1 None – 5 Heavy                              |             |             |             |             |
+| `Walc`       | **Weekend alcohol consumption**  | 1 None – 5 Heavy                              |             |             |             |             |
+| `health`     | **Current health status**        | 1 Very bad – 5 Very good                      |             |             |             |             |
+| `absences`   | **School absences (total)**      | Integer 0 – 93                                |             |             |             |             |
 
 
 ## Flow diagram
@@ -36,7 +68,7 @@ Build a lightweight, open-source prediction service that flags students with a h
 │   UCI Student CSVs     │
 │  (Math & Portuguese)   │
 └────────────┬───────────┘
-             │  Prefect task: download
+             │  Prefect flow: download
              ▼
 ┌────────────────────────┐
 │  Data Cleaning & EDA   │
@@ -87,72 +119,44 @@ CI/CD: GitHub Actions lints, tests, builds the Docker image, and redeploys the F
 
 Scalability: everything is stateless; swap the VM for Kubernetes later without code changes.
 
-## The dataset
-[UCI Student Performance](https://archive.ics.uci.edu/dataset/320/student%2Bperformance)
+## (For MLOps Zoomcamp classmates) Evaluation criteria
 
-Collected via questionnaires and school reports at two Portuguese secondary schools, this dataset captures socioeconomic, family and study-habit factors alongside three period grades (G1–G3) for 649 students in Mathematics and Portuguese language. It has become a staple benchmark for early-warning systems in education because it is small, tidy and publicly licensed, yet rich enough to test fairness and feature-drift monitoring strategies. They convert the final grade G3 into a binary pass (≥ 10) / fail target to align with real-world intervention workflows.
+**Problem description**
+- 2 points: The problem is well described and it's clear what the problem the project solves
 
+**Cloud**
+- 4 points: The project is developed on the cloud and IaC tools are used for provisioning the infrastructure
+*The project can be run partially on the cloud and IaC is used, check FILE*.
 
-## Folder structure
+**Experiment tracking and model registry**
+- 4 points: Both experiment tracking and model registry are used
 
-PASSCOMPASS/
-│
-├── 00_exploration/              # existing notebooks
-├── data/                        # raw + processed CSVs
-│
-├── **01_pipeline/**             # code that Prefect will call
-│   ├── **train.py**             # train + log + register model
-│   └── **prefect_flow.py**      # orchestration wrapper
-│
-├── **conf/**
-│   └── **mlflow_local.yaml**    # central tracking config
-│
-├── **Makefile**                 # convenience targets
-├── **environment.yml**          # include mlflow & prefect
-├── **.env.example**             # env vars (ignored in .gitignore)
-│
-├── LICENSE
-└── README.md
+**Workflow orchestration**
+0 points: No workflow orchestration
+2 points: Basic workflow orchestration
+4 points: Fully deployed workflow
 
-```bash
-make env-create
-make mlflow-ui          # open http://127.0.0.1:5000
-make run-flow           # kicks off the Prefect pipeline
-```
+**Model deployment**
+4 points: The model deployment code is containerized and could be deployed to cloud or special tools for model deployment are used
 
+**Model monitoring**
+- 2 points: Basic model monitoring that calculates and reports metrics
 
-Schema:
+**Reproducibility**
+- 4 points: Instructions are clear, it's easy to run the code, and it works. The versions for all the dependencies are specified.
 
-| Raw column   | Suggested UI label               | Optional help / tooltip                       |             |             |             |             |
-| ------------ | -------------------------------- | --------------------------------------------- | ----------- | ----------- | ----------- | ----------- |
-| `school`     | **School**                       | GP = Gabriel Pereira · MS = Mousinho Silveira |             |             |             |             |
-| `course`     | **Course**                       | Math or Portuguese                            |             |             |             |             |
-| `sex`        | **Gender**                       | F = Female · M = Male                         |             |             |             |             |
-| `age`        | **Age (years)**                  | Integer 15 – 22                               |             |             |             |             |
-| `address`    | **Home address**                 | U = Urban · R = Rural                         |             |             |             |             |
-| `famsize`    | **Family size**                  | LE3 = ≤ 3 · GT3 = > 3                         |             |             |             |             |
-| `Pstatus`    | **Parents’ cohabitation**        | T = Together · A = Apart                      |             |             |             |             |
-| `Medu`       | **Mother’s education level**     | 0 None                                        | 1 Primary   | 2 5-9 yrs   | 3 Secondary | 4 Higher Ed |
-| `Fedu`       | **Father’s education level**     | Same scale as above                           |             |             |             |             |
-| `Mjob`       | **Mother’s job**                 | Teacher, Health, Services, etc.               |             |             |             |             |
-| `Fjob`       | **Father’s job**                 | —                                             |             |             |             |             |
-| `reason`     | **Reason for choosing school**   | Close to home, Reputation, Course, Other      |             |             |             |             |
-| `guardian`   | **Primary guardian**             | Mother, Father, Other                         |             |             |             |             |
-| `traveltime` | **Daily travel time to school**  | 1 < 15 min                                    | 2 15-30 min | 3 30-60 min | 4 > 1 h     |             |
-| `studytime`  | **Weekly study time**            | 1 < 2 h                                       | 2 2-5 h     | 3 5-10 h    | 4 > 10 h    |             |
-| `failures`   | **Past class failures**          | 0 – 3 +                                       |             |             |             |             |
-| `schoolsup`  | **Extra school support**         | Yes / No                                      |             |             |             |             |
-| `famsup`     | **Family study support**         | Yes / No                                      |             |             |             |             |
-| `paid`       | **Paid extra classes**           | Yes / No                                      |             |             |             |             |
-| `activities` | **Extracurricular activities**   | Yes / No                                      |             |             |             |             |
-| `nursery`    | **Attended nursery school**      | Yes / No                                      |             |             |             |             |
-| `higher`     | **Wants higher education**       | Yes / No                                      |             |             |             |             |
-| `internet`   | **Internet at home**             | Yes / No                                      |             |             |             |             |
-| `romantic`   | **In a romantic relationship**   | Yes / No                                      |             |             |             |             |
-| `famrel`     | **Family relationship quality**  | 1 Poor – 5 Excellent                          |             |             |             |             |
-| `freetime`   | **Free time after school**       | 1 Very low – 5 Very high                      |             |             |             |             |
-| `goout`      | **Going-out frequency**          | 1 Rarely – 5 Daily                            |             |             |             |             |
-| `Dalc`       | **Week-day alcohol consumption** | 1 None – 5 Heavy                              |             |             |             |             |
-| `Walc`       | **Weekend alcohol consumption**  | 1 None – 5 Heavy                              |             |             |             |             |
-| `health`     | **Current health status**        | 1 Very bad – 5 Very good                      |             |             |             |             |
-| `absences`   | **School absences (total)**      | Integer 0 – 93                                |             |             |             |             |
+**Best practices**
+- There are unit tests (1 point)
+*It can be found [here](./how_to_run.md#unit-tests)*
+
+- There is an integration test (1 point)
+*It can be found [here](./how_to_run.md#integration-tests)*
+
+- Linter and/or code formatter are used (1 point)
+
+- There's a Makefile (1 point)
+*It can be found [here](./Makefile)*
+
+- There are pre-commit hooks (1 point)
+
+- There's a CI/CD pipeline (2 points)

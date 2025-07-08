@@ -7,12 +7,17 @@ python flows/extract_flow.py --base-dir /tmp/data    # custom location
 """
 
 from __future__ import annotations
-from pathlib import Path
+
+import argparse
+import io
+import urllib.request
+import zipfile
 from datetime import datetime
-import argparse, io, zipfile, urllib.request
+from pathlib import Path
+
 import pandas as pd
+from prefect import flow, get_run_logger, task
 from sklearn.model_selection import train_test_split
-from prefect import flow, task, get_run_logger
 
 # ────────────────────────────────────────────────────────────────────────────
 # Defaults ───────────────────────────────────────────────────────────────────
@@ -22,6 +27,7 @@ UCI_URL = (  # one public ZIP – no auth needed
 BASE_DIR = (
     Path(__file__).resolve().parent.parent / "data" / "passcompass"
 ).as_posix()  # one level above “pipeline”
+
 
 # ────────────────────────────────────────────────────────────────────────────
 # TASKS ──────────────────────────────────────────────────────────────────────
@@ -53,10 +59,10 @@ def download_and_extract(url: str, base_dir: str) -> Path:
 def treat_data(dir_path: Path) -> Path:
     """Combine math & Portuguese datasets and engineer the target."""
     math_df = pd.read_csv(dir_path / "student-mat.csv", sep=";")
-    por_df  = pd.read_csv(dir_path / "student-por.csv", sep=";")
+    por_df = pd.read_csv(dir_path / "student-por.csv", sep=";")
 
     math_df["course"] = "math"
-    por_df["course"]  = "por"
+    por_df["course"] = "por"
 
     students = (
         pd.concat([math_df, por_df], ignore_index=True)
@@ -78,9 +84,9 @@ def split_train_test(data_path: Path, test_size: float = 0.2, seed: int = 42):
     train, test = train_test_split(df, test_size=test_size, random_state=seed)
 
     train_path = data_path.with_name("train.parquet")
-    test_path  = data_path.with_name("test.parquet")
+    test_path = data_path.with_name("test.parquet")
     train.to_parquet(train_path, index=False)
-    test.to_parquet(test_path,  index=False)
+    test.to_parquet(test_path, index=False)
     return train_path, test_path
 
 
@@ -100,15 +106,14 @@ def basic_stats(train_path: Path):
 
 # ────────────────────────────────────────────────────────────────────────────
 # FLOW ───────────────────────────────────────────────────────────────────────
-#@flow(name="extract_flow", log_prints=True, tags=["project:passcompass", "stage:dev", "type:extract"])
+# @flow(name="extract_flow", log_prints=True, tags=["project:passcompass", "stage:dev", "type:extract"])
 @flow(name="extract_flow", log_prints=True)
 def extract_flow(url: str = UCI_URL, base_dir: str = BASE_DIR):
 
-
-    data_dir      = download_and_extract(url, base_dir)     # 1
-    cleaned_path  = treat_data(data_dir)                    # 2
-    train_path, _ = split_train_test(cleaned_path)          # 3
-    basic_stats(train_path)                                 # 4
+    data_dir = download_and_extract(url, base_dir)  # 1
+    cleaned_path = treat_data(data_dir)  # 2
+    train_path, _ = split_train_test(cleaned_path)  # 3
+    basic_stats(train_path)  # 4
 
 
 # ────────────────────────────────────────────────────────────────────────────

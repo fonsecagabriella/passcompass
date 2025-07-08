@@ -3,46 +3,50 @@ Reusable helpers for model evaluation & MLflow logging.
 """
 
 from __future__ import annotations
-import json, tempfile, pathlib
-from typing import Sequence
 
+import json
+import pathlib
+import tempfile
+from collections.abc import Sequence
+
+import matplotlib.pyplot as plt
 import mlflow
+import seaborn as sns
 from sklearn.metrics import (
-    roc_auc_score,
+    classification_report,
+    confusion_matrix,
     f1_score,
     precision_score,
     recall_score,
-    confusion_matrix,
-    classification_report
+    roc_auc_score,
 )
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
+
 
 def evaluate_and_log(
-    model,                     # fitted estimator with predict / predict_proba
-    X_test, y_test,
+    model,  # fitted estimator with predict / predict_proba
+    X_test,
+    y_test,
     *,
-    run,                       # active mlflow run (mlflow.start_run()) or None
+    run,  # active mlflow run (mlflow.start_run()) or None
     positive_label: int = 1,
     feature_names: Sequence[str] | None = None,
-    prefix: str = ""
-    ) -> dict:
+    prefix: str = "",
+) -> dict:
     """
     Compute metrics & log them to MLflow.
 
     Returns a dict of metric_name -> value for convenience.
     """
-    probas = getattr(model, "predict_proba")(X_test)[:, positive_label]
-    preds  = model.predict(X_test)
+    probas = model.predict_proba(X_test)[:, positive_label]
+    preds = model.predict(X_test)
 
     metrics = {
-        f"{prefix}roc_auc":      roc_auc_score(y_test, probas),
-        f"{prefix}f1_macro":     f1_score(y_test, preds, average="macro"),
-        f"{prefix}accuracy":     model.score(X_test, y_test),
-        f"{prefix}f1_fail":      f1_score(y_test, preds, pos_label=1 - positive_label),
+        f"{prefix}roc_auc": roc_auc_score(y_test, probas),
+        f"{prefix}f1_macro": f1_score(y_test, preds, average="macro"),
+        f"{prefix}accuracy": model.score(X_test, y_test),
+        f"{prefix}f1_fail": f1_score(y_test, preds, pos_label=1 - positive_label),
         f"{prefix}precision_fail": precision_score(y_test, preds, pos_label=1 - positive_label),
-        f"{prefix}recall_fail":    recall_score(y_test, preds, pos_label=1 - positive_label),
+        f"{prefix}recall_fail": recall_score(y_test, preds, pos_label=1 - positive_label),
     }
 
     if run is None:
@@ -56,10 +60,17 @@ def evaluate_and_log(
         cm = confusion_matrix(y_test, preds)
         fig, ax = plt.subplots(figsize=(3, 3))
         sns.heatmap(
-            cm, annot=True, fmt="d", cmap="Blues", cbar=False,
-            xticklabels=["Fail", "Pass"], yticklabels=["Fail", "Pass"], ax=ax
+            cm,
+            annot=True,
+            fmt="d",
+            cmap="Blues",
+            cbar=False,
+            xticklabels=["Fail", "Pass"],
+            yticklabels=["Fail", "Pass"],
+            ax=ax,
         )
-        ax.set_xlabel("Predicted"); ax.set_ylabel("Actual")
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("Actual")
         fig.tight_layout()
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -75,6 +86,7 @@ def evaluate_and_log(
             mlflow.set_tag("feature_list", json.dumps(list(feature_names)))
 
     return metrics
+
 
 def _flatten_report(report: Mapping[str, dict], prefix: str = "") -> dict:
     """
@@ -93,24 +105,17 @@ def _flatten_report(report: Mapping[str, dict], prefix: str = "") -> dict:
             flat[f"{prefix}accuracy"] = metrics
     return flat
 
+
 def log_classification_report(
-    y_true,
-    y_pred,
-    run=None,
-    *,
-    prefix: str = "",
-    artifact_path: str = "reports"
-    ) -> dict:
+    y_true, y_pred, run=None, *, prefix: str = "", artifact_path: str = "reports"
+) -> dict:
     """
     Compute + log the entire sklearn classification_report to MLflow.
 
     Returns the flattened metrics dict for immediate use.
     """
     report_dict = classification_report(
-        y_true, y_pred,
-        target_names=None,      # keep numeric labels
-        output_dict=True,
-        zero_division=0
+        y_true, y_pred, target_names=None, output_dict=True, zero_division=0  # keep numeric labels
     )
 
     metrics = _flatten_report(report_dict, prefix=prefix)

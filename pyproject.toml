@@ -1,0 +1,20 @@
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+# Lint rules: see https://docs.astral.sh/ruff/rules/
+select = [
+  "E",  # pycodestyle errors
+  "F",  # pyflakes
+  "I",  # isort
+  "UP", # pyupgrade
+  "B",  # bugbear
+  "S",  # bandit-style security
+]
+ignore = ["E501"]  # let Black handle line length
+# --- optional: enable Ruff’s Black-compatible formatter instead of Black ---
+# [tool.ruff.format]
+# docstring-code-format = true
