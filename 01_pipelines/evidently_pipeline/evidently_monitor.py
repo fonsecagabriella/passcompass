@@ -3,6 +3,7 @@ Monitor new scoring batch against baseline
 Evidently 0.7.x  •  Prefect 3.x
 """
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -42,10 +43,28 @@ def load_current(batch_path: Path) -> pd.DataFrame:
 
 @task
 def run_evidently(current: pd.DataFrame) -> Report:
-    baseline_report = Report.from_json(BASELINE_JSON.read_text())
-    reference_data = pd.DataFrame(baseline_report._data["reference_data"])  # quick extract
+    """
+    Compare the current batch to the stored baseline batch with Evidently.
+    Works with baselines saved by Evidently ≤0.7.x or ≥0.8.
+    """
+    # ---------- load baseline file ----------
+    baseline_dict = json.loads(BASELINE_JSON.read_text())
 
-    report = Report(metrics=[DataDriftPreset(), ValueDrift(column=TARGET_COL)])
+    # ---------- extract reference rows no matter the schema ----------
+    if "reference_data" in baseline_dict:  # Evidently ≤0.7.x
+        ref_rows = baseline_dict["reference_data"]
+    else:  # Evidently ≥0.8
+        ref_rows = baseline_dict["data"]["reference"]["data"]
+
+    reference_data = pd.DataFrame(ref_rows)
+
+    # ---------- run drift report ----------
+    report = Report(
+        metrics=[
+            DataDriftPreset(),
+            ValueDrift(column=TARGET_COL),
+        ]
+    )
     report.run(reference_data=reference_data, current_data=current)
     return report
 

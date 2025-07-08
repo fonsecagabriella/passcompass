@@ -48,9 +48,9 @@ def run_hpo(
     X_val,
     y_val,
     dv,
-    experiment_name: "MLflow-training",
-    tag_name: str,
-    acc_min: float,  # <-- external variable
+    experiment_name: str = "mlflow-training",
+    tag_name: str = "generic",  # <-- model type tag
+    acc_min: float = 0.75,  # <-- external variable
     max_evals: int = 30,
     random_state=None,
     schema=None,  # <- optional feature schema

@@ -172,29 +172,47 @@ You can navigate to: `http://127.0.0.1:8000/`
 <img src="./imgs/passcompass_pass.png" width="50%">
 <img src="./imgs/passcompass_fail.png" width="50%">
 
+<div id="webapp-docker"></div>
+
 4. Optional - Run the web application in a docker container
 
-First build the dockerfile:
+First build the [dockerfile](./Dockerfile):
 
 `docker build -t passcompass:1.0 .`
 
-
+Next, run the container.
+Note: you have to adapt the -v below with the full path folder in your location.
 
 ```bash
 docker run \
   -p 8080:8080 \
   -e MLFLOW_TRACKING_URI="http://host.docker.internal:5001" \
-  -v "/Users/gabi/codes/passcompass/artifacts:/app/artifacts" \
+  -v "/Users/gabi/codes/passcompass/artifacts:/Users/gabi/codes/passcompass/artifacts" \
   passcompass:1.0
 ```
 
+🚨 6. Draft Evidently flow simple one
 
 
-5. Draft Evidently flow simple one
 
 
+
+### 2.0 Check the services
 
 <div id="unit-tests"></div>
+
+#### Mlflow model registery
+
+You can access MlFlow locally at `http://127.0.0.1:5001/`.
+From the UI, click in `models` to follow the model registry.
+
+<img src="./imgs/mlflow_model_registry.png" width="60%" id="mlflow">
+
+#### Prefect dashboards
+
+You can access Prefect locally at `http://127.0.0.1:4200/dashboard`.
+
+
 
 ### 2.0 Unit tests
 Run unit tests anytime with
@@ -243,7 +261,8 @@ For the future:
 - A **pre-commit** hook runs `black --check` and `ruff --fix` on every `git commit`.
 
 - Install once with: `pre-commit install`
-- You can skip a hook once with: `git commit -m "msg" --no-verify`.
+- You can skip a hook once with: `git commit -m "msg" --no-verify`
+- You can check the files before commit with: `pre-commit run --all-files`
 
 The same checks run in CI (.github/workflows/lint.yml) to guarantee every PR stays style-clean.
 

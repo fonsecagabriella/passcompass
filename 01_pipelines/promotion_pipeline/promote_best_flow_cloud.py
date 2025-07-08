@@ -159,4 +159,4 @@ def promote_best_model_flow_gcs(
 
 # ────────────────────────── CLI entry ──────────────────────────────
 if __name__ == "__main__":
-    promote_best_model_flow(experiment=EXPERIMENT)
+    promote_best_model_flow_gcs(experiment=EXPERIMENT)

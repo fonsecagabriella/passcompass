@@ -129,21 +129,23 @@ Scalability: everything is stateless; swap the VM for Kubernetes later without c
 *The project can be run partially on the cloud and IaC is used, check [here](./how_to_run.md#cloud)*.
 
 **Experiment tracking and model registry**
-- 4 points: Both experiment tracking and model registry are used
+- ✅ 4 points: Both experiment tracking and model registry are used
+*You can find instructions [here](./how_to_run.md#mlflow*.
 
 **Workflow orchestration**
-0 points: No workflow orchestration
 2 points: Basic workflow orchestration
 4 points: Fully deployed workflow
 
 **Model deployment**
-4 points: The model deployment code is containerized and could be deployed to cloud or special tools for model deployment are used
+- ✅ 4 points: The model deployment code is containerized and could be deployed to cloud or special tools for model deployment are used
+*The model is containerized. You can check the [dockerfile](./Dockerfile) or more instructions about the model [here](./how_to_run.md#webapp-docker)*
 
 **Model monitoring**
 - 2 points: Basic model monitoring that calculates and reports metrics
 
 **Reproducibility**
-- 4 points: Instructions are clear, it's easy to run the code, and it works. The versions for all the dependencies are specified.
+- ✅ 4 points: Instructions are clear, it's easy to run the code, and it works. The versions for all the dependencies are specified.
+*[This document](./how_to_run.md) containts detailed instructions on how to duplicate and run this project both locally and in the cloud (GCS)*
 
 **Best practices**
 - ✅ There are unit tests (1 point)

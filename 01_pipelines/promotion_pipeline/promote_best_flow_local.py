@@ -85,4 +85,4 @@ def promote_best_model_flow_local(
 
 
 if __name__ == "__main__":
-    promote_best_model_flow(experiment=EXPERIMENT)
+    promote_best_model_flow_local(experiment=EXPERIMENT)
