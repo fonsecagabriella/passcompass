@@ -106,6 +106,9 @@ GCS_DATA_URI=gs://passcompass-ml-bucket/data # edit path
 LOCAL_DATA_URI=passcompass/data/passcompass # edit path
 ```
 
+------
+
+<div id="cloud"></div>
 
 ### 0.2 **(if `ENVIRONMENT=gcs`)** Set up Google Cloud Project 
 
@@ -169,14 +172,31 @@ You can navigate to: `http://127.0.0.1:8000/`
 <img src="./imgs/passcompass_pass.png" width="50%">
 <img src="./imgs/passcompass_fail.png" width="50%">
 
+4. Optional - Run the web application in a docker container
 
-4. Draft Evidently flow simple one
+First build the dockerfile:
+
+`docker build -t passcompass:1.0 .`
+
+
+
+```bash
+docker run \
+  -p 8080:8080 \
+  -e MLFLOW_TRACKING_URI="http://host.docker.internal:5001" \
+  -v "/Users/gabi/codes/passcompass/artifacts:/app/artifacts" \
+  passcompass:1.0
+```
+
+
+
+5. Draft Evidently flow simple one
 
 
 
 <div id="unit-tests"></div>
 
-### Unit tests
+### 2.0 Unit tests
 Run unit tests anytime with
 `pytest -q`
 
@@ -192,10 +212,11 @@ For the future:
 - Can the Flask endpoint answer a happy-path request?
 - Is the monitoring flow with Evidently at least able to run end-to-end?
 
+------
 
 <div id="integration-tests"></div>
 
-### Integration tests
+### 3.0 Integration tests
 **Currently implemented tests:**
 - [Test 01: Extract Integration](./tests/test_extract_integration.py)
 Minimal “happy-path” integration test that runs the whole
@@ -207,3 +228,30 @@ For the future:
 - . Train → Promote happy path
 - Failing download → graceful error
 - After a train flow completes, open the MLflow run and assert it logged all expected metrics & params
+
+------
+<div id="code-format"></div>
+
+ ## 4.0 Code style & quality checks
+
+| Tool | Role | How to run it manually |
+|------|------|------------------------|
+| [**Black**](https://black.readthedocs.io/) | Opinionated code formatter | `black .` |
+| [**Ruff**](https://docs.astral.sh/ruff/)  | Linter (+ import-sorter & quick-fixes) | `ruff check --fix .` |
+
+- Both tools read their configuration from [`pyproject.toml`](./pyproject.toml).
+- A **pre-commit** hook runs `black --check` and `ruff --fix` on every `git commit`.
+
+- Install once with: `pre-commit install`
+- You can skip a hook once with: `git commit -m "msg" --no-verify`.
+
+The same checks run in CI (.github/workflows/lint.yml) to guarantee every PR stays style-clean.
+
+------
+
+docker run -p 8080:8080 \
+  -e ENVIRONMENT=gcs \
+  -e GCS_MODEL_URI=gs://my-bucket/model/v12 \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/key.json \
+  -v $HOME/key.json:/secrets/key.json \
+  ghcr.io/your-org/passcompass-web:latest

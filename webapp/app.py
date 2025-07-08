@@ -21,17 +21,15 @@ from __future__ import annotations
 import json
 import os
 import pathlib
-
-# import mlflow.pyfunc
 import pickle
 import tempfile
 from typing import Any
 
 import mlflow
-from dotenv import load_dotenv  # make sure you `pip install python-dotenv`
-from google.cloud import storage  # NEW
+from dotenv import load_dotenv
+from google.cloud import storage
 
-load_dotenv()  # picks up .env automatically
+load_dotenv()
 
 from flask import (
     Flask,
@@ -43,24 +41,18 @@ from flask import (
 )
 
 # ─────────────────────────── Configuration ──────────────────────────
-# Resolve data location based on ENVIRONMENT
-# ENVIRONMENT   = os.getenv("ENVIRONMENT", "local").lower()
-ENVIRONMENT = "local"
-# for local development, model lives in MLflow
-MODEL_NAME = "passcompass_generic"
-MODEL_ALIAS = "best_202506"
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local").lower()
+
+MODEL_NAME = os.getenv("MODEL_NAME", "passcompass_generic")
+MODEL_ALIAS = os.getenv("MODEL_ALIAS", "best")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001")
-LOCAL_MODEL_URI = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
-dv = None  # global singleton
-# for retrieving model from GCS
-GCS_MODEL_URI = os.getenv(
-    "GCS_MODEL_URI", "gs://passcompass-ml-bucket/model/passcompass_generic_v12"
+
+LOCAL_MODEL_URI = os.getenv(
+    "LOCAL_MODEL_URI",
+    f"models:/{MODEL_NAME}@{MODEL_ALIAS}",
 )
 
-if ENVIRONMENT == "local" and not LOCAL_MODEL_URI:
-    raise RuntimeError("ENVIRONMENT=local but LOCAL_MODEL_URI is not set")
-if ENVIRONMENT == "gcs" and not GCS_MODEL_URI:
-    raise RuntimeError("ENVIRONMENT=gcs but GCS_MODEL_URI is not set")
+GCS_MODEL_URI = os.getenv("GCS_MODEL_URI")
 
 
 # ─────────────────────────── Flask setup ────────────────────────────
@@ -68,7 +60,8 @@ app = Flask(__name__, static_folder="static", template_folder="templates")
 
 # Global (per worker) singletons
 model: mlflow.pyfunc.PyFuncModel | None = None
-schema: list[dict[str, Any]] = []  # list of {"name":str,"kind":str,…}
+schema: list[dict[str, Any]] = []
+dv: pickle.Pickler | None = None
 
 
 # ─────────────────────── Helpers & bootstrap ────────────────────────
@@ -95,12 +88,32 @@ def _download_dv(uri: str) -> str:
     # 1️⃣  Normalise parent folder that holds MLmodel
     parent = uri[:-6] if uri.rstrip("/").endswith("/model") else uri
 
+    # Get the MLflow tracking URI from environment variables
+    # This is crucial for telling the client where to download artifacts from
+    current_mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+    if not current_mlflow_tracking_uri:
+        # Fallback to default if not set, though it should be set by docker run
+        current_mlflow_tracking_uri = "http://127.0.0.1:5001"
+
     # 2️⃣  Registry path → let mlflow handle; single layout is enough
     if parent.startswith("models:/"):
+        # Explicitly set the tracking URI for the MLflow client
+        # before attempting to download artifacts. This is done in _startup_once
+        # but also explicitly passed here for robustness.
+        # mlflow.set_tracking_uri(current_mlflow_tracking_uri) # This line is handled by _startup_once
+
         try:
-            return mlflow.artifacts.download_artifacts(f"{parent}/dv.pkl")
+            # When downloading from 'models:/' URI, MLflow client will use the
+            # currently set tracking URI to communicate with the server to get artifacts.
+            # Explicitly pass tracking_uri to force HTTP download from the server.
+            return mlflow.artifacts.download_artifacts(
+                f"{parent}/dv.pkl", tracking_uri=current_mlflow_tracking_uri
+            )
         except Exception:
-            return mlflow.artifacts.download_artifacts(f"{parent}/dv.pkl/dv.pkl")
+            # Explicitly pass tracking_uri to force HTTP download from the server.
+            return mlflow.artifacts.download_artifacts(
+                f"{parent}/dv.pkl/dv.pkl", tracking_uri=current_mlflow_tracking_uri
+            )
 
     # 3️⃣  GCS path(s)
     if parent.startswith("gs://"):
@@ -121,6 +134,8 @@ def _download_dv(uri: str) -> str:
         raise FileNotFoundError(f"dv.pkl not found under {uri}")
 
     # 4️⃣  Local filesystem path
+    # This block is problematic for Docker containers if the path is on the host.
+    # It's generally better to rely on MLflow server for artifacts in a containerized app.
     path1 = pathlib.Path(parent) / "dv.pkl"
     path2 = path1 / "dv.pkl"
     for p in (path1, path2):
@@ -129,49 +144,12 @@ def _download_dv(uri: str) -> str:
     raise FileNotFoundError(f"dv.pkl not found under {uri}")
 
 
-# def _local_model_uri():
-#     """
-#     Returns the local model URI based on the environment.
-#     This is used for local development/testing.
-#     """
-#     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-
-#     # ── fetch and cache the feature schema  ─────────────────────────────────
-#     # Create the client and fetch by alias
-#     client = MlflowClient()
-
-#     mv = client.get_model_version_by_alias(MODEL_NAME, MODEL_ALIAS)  # ModelVersion object
-#     run_id = mv.run_id
-
-#     model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}@{MODEL_ALIAS}")
-
-#     print(model.metadata)  # print model metadata
-
-#     print(f"Loading model {MODEL_NAME} v{mv.version} from run {run_id}…")
-#     return f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
-
-
 def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
-    """
-    Loads the MLflow model (Registry or GCS) and returns (model, schema).
-
-    Search order for schema:
-      1. feature_schema.json file inside the model artifacts
-      2. features.json  (legacy name)
-      3. Fallback: derive a minimal schema from MLflow signature
-    """
-    # 1️⃣ Decide URI
-    # if ENVIRONMENT == "local":
-    #     uri = LOCAL_MODEL_URI
-    #     app.logger.info(f"Loading model from MLflow Registry: {uri}")
-    # else:  # gcs
-    #     uri = GCS_MODEL_URI
-    #     app.logger.info(f"Loading model from GCS: {uri}")
-
     uri = _resolve_model_uri()
     app.logger.info(f"Resolved model URI: {uri}")
 
     global dv
+
     if dv is None:
         dv_path = _download_dv(uri)
         if os.path.isdir(dv_path):
@@ -190,20 +168,25 @@ def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
     schema_path: str | None = None
     for name in ("feature_schema.json", "features.json"):
         try:
-            schema_path = mlflow.artifacts.download_artifacts(artifact_uri=f"{uri}/{name}")
+            # Explicitly pass tracking_uri for schema download as well
+            schema_path = mlflow.artifacts.download_artifacts(
+                artifact_uri=f"{uri}/{name}",
+                tracking_uri=os.getenv("MLFLOW_TRACKING_URI"),  # Explicitly pass tracking_uri
+            )
             if os.path.exists(schema_path):
                 break
         except Exception:
             schema_path = None
 
     # 3️⃣ Load model itself
+    # mlflow.pyfunc.load_model also respects mlflow.set_tracking_uri()
     model = mlflow.pyfunc.load_model(uri)
 
     # 4️⃣ If we found a schema file, use it
     if schema_path and os.path.exists(schema_path):
         with open(schema_path) as f:
             schema = json.load(f)
-            print(schema)  # print model metadata
+            print(schema)
         return model, schema
 
     # 5️⃣ Fallback: derive schema from signature
@@ -220,6 +203,9 @@ def _load_model_and_schema() -> tuple[mlflow.pyfunc.PyFuncModel, list]:
 def _startup_once() -> None:
     """Load model + schema exactly once per worker process."""
     global model, schema
+    # Ensure MLflow tracking URI is set at startup for all MLflow operations
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
+
     model, schema = _load_model_and_schema()
     app.logger.info(f"Model loaded from {ENVIRONMENT.upper()}  |  " f"{len(schema)} features")
 
@@ -256,7 +242,7 @@ def predict():
     # vectorise with the DictVectorizer we loaded above
     X_vec = dv.transform([casted]).toarray()
 
-    proba_pass = float(model.predict(X_vec))  # your model outputs P(pass)
+    proba_pass = float(model.predict(X_vec))
     return jsonify(probability=round(proba_pass, 6))
 
 

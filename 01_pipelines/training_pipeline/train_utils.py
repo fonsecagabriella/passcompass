@@ -5,11 +5,10 @@ import joblib
 import mlflow
 import numpy as np
 from hyperopt import STATUS_OK, Trials, fmin, tpe
-from sklearn.metrics import accuracy_score, recall_score
-
 from passcompass_utils.metrics import (
     log_classification_report,
 )
+from sklearn.metrics import accuracy_score, recall_score
 
 
 def ensure_experiment(name: str = "MLflow-training"):

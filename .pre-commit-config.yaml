@@ -3,9 +3,9 @@ repos:
     rev: 25.1.0
     hooks:
       - id: black
-        args: ["--check"]   # fail CI if un-formatted
+        args: [--quiet]        # apply fixes instead of check-only
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.0
+    rev: v0.4.5
     hooks:
       - id: ruff
         args: ["--fix"]     # auto-apply safe fixes

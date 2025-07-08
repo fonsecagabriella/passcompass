@@ -122,11 +122,11 @@ Scalability: everything is stateless; swap the VM for Kubernetes later without c
 ## (For MLOps Zoomcamp classmates) Evaluation criteria
 
 **Problem description**
-- 2 points: The problem is well described and it's clear what the problem the project solves
+-  ✅ 2 points: The problem is well described and it's clear what the problem the project solves
 
 **Cloud**
-- 4 points: The project is developed on the cloud and IaC tools are used for provisioning the infrastructure
-*The project can be run partially on the cloud and IaC is used, check FILE*.
+- ✅ 4 points: The project is developed on the cloud and IaC tools are used for provisioning the infrastructure
+*The project can be run partially on the cloud and IaC is used, check [here](./how_to_run.md#cloud)*.
 
 **Experiment tracking and model registry**
 - 4 points: Both experiment tracking and model registry are used
@@ -146,17 +146,45 @@ Scalability: everything is stateless; swap the VM for Kubernetes later without c
 - 4 points: Instructions are clear, it's easy to run the code, and it works. The versions for all the dependencies are specified.
 
 **Best practices**
-- There are unit tests (1 point)
-*It can be found [here](./how_to_run.md#unit-tests)*
+- ✅ There are unit tests (1 point)
+      - *The list of current unit tests can be found [here](./how_to_run.md#unit-tests)*
 
-- There is an integration test (1 point)
-*It can be found [here](./how_to_run.md#integration-tests)*
+- ✅  There is an integration test (1 point)
+      - *The list of current integration tests can be found [here](./how_to_run.md#integration-tests)*
 
-- Linter and/or code formatter are used (1 point)
+- ✅ Linter and/or code formatter are used (1 point)
+      - *Linter+Black are used, instructions can be found [here](./how_to_run.md#code-format)*
 
-- There's a Makefile (1 point)
-*It can be found [here](./Makefile)*
+- ✅  There's a Makefile (1 point)code-format
+      - *It can be found [here](./Makefile)*
 
 - There are pre-commit hooks (1 point)
 
-- There's a CI/CD pipeline (2 points)
+- ✅  There's a CI/CD pipeline (2 points)
+      - *[Lint + Tests workflow](./.github/workflows/lint.yml) runs in CI*
+      - CI/CD is handled by GitHub Actions.
+Every push or pull-request triggers the workflow in
+.github/workflows/ci.yml, which runs Black, Ruff and pytest; a green
+build on main auto-publishes the Docker image to GitHub Container
+Registry.
+
+
+
+## For the future
+
+- Pre-seed MLflow with a “good” model (say val_macro_avg_f1=0.8, alias=best). Then run a flow that logs a worse score (0.6). Assert that alias "best" still points to the old version.
+
+
+
+docker run \
+  -p 8080:8080 \
+  -e MLFLOW_TRACKING_URI="http://host.docker.internal:5001" \
+  -v "/Users/gabi/codes/passcompass/artifacts:/app/artifacts" \  
+  passcompass:1.0
+
+
+  docker run \
+  -p 8080:8080 \
+  -e MLFLOW_TRACKING_URI="http://host.docker.internal:5001" \
+  -v "/Users/gabi/codes/passcompass/artifacts:/app/artifacts" \  # <--- ADD THIS LINE
+  passcompass:1.0
