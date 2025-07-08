@@ -132,9 +132,6 @@ def baseline_flow(
     snapshot = build_snapshot(ref)
     save_report(snapshot, out_dir)
 
-    # bucket_name = "passcompass-ml-bucket"
-    # ENVIRONMENT = "gcs"
-
     # if ENVIRONMENT == "gcs" and bucket_name:
     if os.getenv("ENVIRONMENT", "local").lower() == "gcs" and bucket_name:
 

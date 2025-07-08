@@ -48,16 +48,17 @@ def run_evidently(current: pd.DataFrame) -> Report:
     Works with baselines saved by Evidently ≤0.7.x or ≥0.8.
     """
     # ---------- load baseline file ----------
-    baseline_dict = json.loads(BASELINE_JSON.read_text())
+    #baseline_dict = json.loads(BASELINE_JSON.read_text())
 
     # ---------- extract reference rows no matter the schema ----------
-    if "reference_data" in baseline_dict:  # Evidently ≤0.7.x
-        ref_rows = baseline_dict["reference_data"]
-    else:  # Evidently ≥0.8
-        ref_rows = baseline_dict["data"]["reference"]["data"]
+    # if "reference_data" in baseline_dict:  # Evidently ≤0.7.x
+    #     ref_rows = baseline_dict["reference_data"]
+    # else:  # Evidently ≥0.8
+    #     ref_rows = baseline_dict["data"]["reference"]["data"]
 
-    reference_data = pd.DataFrame(ref_rows)
+    # reference_data = pd.DataFrame(ref_rows)
 
+    reference_data = pd.read_parquet(PROJECT_ROOT / "data/passcompass/2025_06_10/train.parquet")
     # ---------- run drift report ----------
     report = Report(
         metrics=[
@@ -65,8 +66,8 @@ def run_evidently(current: pd.DataFrame) -> Report:
             ValueDrift(column=TARGET_COL),
         ]
     )
-    report.run(reference_data=reference_data, current_data=current)
-    return report
+    my_eval = report.run(reference_data=reference_data, current_data=current)
+    return my_eval
 
 
 @task
@@ -78,8 +79,10 @@ def persist_report(report: Report, batch_path: Path):
     html_path = out_dir / f"monitor_{stamp}.html"
     json_path = out_dir / f"monitor_{stamp}.json"
 
-    report.save_html(html_path)
-    report.save_json(json_path)
+    # report.save_html(html_path)
+    # report.save_json(json_path)
+
+    json_path.write_text(report.json(), encoding="utf-8")
 
     print("✅ Drift report saved →", html_path.relative_to(PROJECT_ROOT))
     return json_path

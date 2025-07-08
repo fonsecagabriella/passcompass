@@ -214,7 +214,7 @@ You can access Prefect locally at `http://127.0.0.1:4200/dashboard`.
 
 
 
-### 2.0 Unit tests
+### 3.0 Unit tests
 Run unit tests anytime with
 `pytest -q`
 
@@ -234,7 +234,7 @@ For the future:
 
 <div id="integration-tests"></div>
 
-### 3.0 Integration tests
+### 4.0 Integration tests
 **Currently implemented tests:**
 - [Test 01: Extract Integration](./tests/test_extract_integration.py)
 Minimal “happy-path” integration test that runs the whole
@@ -250,7 +250,7 @@ For the future:
 ------
 <div id="code-format"></div>
 
- ## 4.0 Code style & quality checks
+ ## 5.0 Code style & quality checks
 
 | Tool | Role | How to run it manually |
 |------|------|------------------------|
@@ -268,9 +268,21 @@ The same checks run in CI (.github/workflows/lint.yml) to guarantee every PR sta
 
 ------
 
-docker run -p 8080:8080 \
-  -e ENVIRONMENT=gcs \
-  -e GCS_MODEL_URI=gs://my-bucket/model/v12 \
-  -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/key.json \
-  -v $HOME/key.json:/secrets/key.json \
-  ghcr.io/your-org/passcompass-web:latest
+<div id="webapp-git">
+
+## 6.0 Running the web application from latest published image
+
+- Pull the image
+`docker pull ghcr.io/fonsecagabriella/passcompass-web:latest`
+
+- Run the image
+```bash
+docker run \
+  -p 8080:8080 \
+  -e MLFLOW_TRACKING_URI="http://host.docker.internal:5001" \
+  -v "/Users/gabi/codes/passcompass/artifacts:/app/artifacts" \
+  ghcr.io/fonsecagabriella/passcompass-web:latest
+```
+
+The image is deployed everytime a new commit passed the tests.
+You might need to updated the location -v of where the artifacts folder exists.
