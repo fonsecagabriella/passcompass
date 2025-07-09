@@ -20,17 +20,21 @@ import os
 from pathlib import Path
 
 import pandas as pd
+from dotenv import load_dotenv
 from evidently import Report
 from evidently.metrics import ValueDrift  # target‑drift metric
 from evidently.presets import DataDriftPreset
 from google.cloud import storage
 from prefect import flow, task
 
+load_dotenv()
+
 # ────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parents[2]  # …/passcompass
 REFERENCE_PATH = PROJECT_ROOT / "data" / "passcompass" / "2025_06_10" / "train.parquet"
 TARGET_COL = "pass"  # 0/1 label
 OUT_DIR = PROJECT_ROOT / "reports"
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local").lower()  # local or gcs
 # ────────────────────────────────────────────────────────────────
 
 
@@ -132,8 +136,8 @@ def baseline_flow(
     snapshot = build_snapshot(ref)
     save_report(snapshot, out_dir)
 
-    # if ENVIRONMENT == "gcs" and bucket_name:
-    if os.getenv("ENVIRONMENT", "local").lower() == "gcs" and bucket_name:
+    if ENVIRONMENT == "gcs" and bucket_name:
+        # if os.getenv("ENVIRONMENT", "local").lower() == "gcs" and bucket_name:
 
         upload_to_gcs(ref_path, bucket_name, f"evidently/reference/{ref_path.name}")
         upload_to_gcs(

@@ -3,13 +3,19 @@ Monitor new scoring batch against baseline
 Evidently 0.7.x  •  Prefect 3.x
 """
 
+import os
 from pathlib import Path
 
 import pandas as pd
+from dotenv import load_dotenv
 from evidently import Report
 from evidently.metrics import ValueDrift
 from evidently.presets import DataDriftPreset
+from evidently_create_baseline import upload_to_gcs
 from prefect import flow, task
+
+load_dotenv()
+
 
 # ─── paths & constants ────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +24,8 @@ BASELINE_JSON = PROJECT_ROOT / "reports" / "evidently_baseline.json"
 OUT_PARENT_DIR = PROJECT_ROOT / "reports" / "monitor"
 TARGET_COL = "pass"
 MIN_ROWS = 50  # skip very small batches
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local").lower()  # local or gcs
+bucket_name = os.getenv("GCS_BUCKET", "passcompass-ml-bucket")
 # ──────────────────────────────────────────────────────────────
 
 
@@ -75,15 +83,28 @@ def persist_report(report: Report, batch_path: Path):
     out_dir = OUT_PARENT_DIR / stamp
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    html_path = out_dir / f"monitor_{stamp}.html"
+    # html_path = out_dir / f"monitor_{stamp}.html"
     json_path = out_dir / f"monitor_{stamp}.json"
 
     # report.save_html(html_path)
     # report.save_json(json_path)
 
-    json_path.write_text(report.json(), encoding="utf-8")
+    if ENVIRONMENT == "local":
+        json_path.write_text(report.json(), encoding="utf-8")
+        print("✅ Drift report saved →", json_path.relative_to(PROJECT_ROOT))
 
-    print("✅ Drift report saved →", html_path.relative_to(PROJECT_ROOT))
+    if ENVIRONMENT == "gcs" and bucket_name:
+
+        out_dir = f"evidently/reports/monitor/{stamp}/monitor_{stamp}.json"
+
+        upload_to_gcs(
+            json_path,
+            bucket_name,
+            out_dir,
+        )
+
+        print(f"✅ Reference parquet uploaded to gs://{bucket_name}/{out_dir}")
+
     return json_path
 
 
