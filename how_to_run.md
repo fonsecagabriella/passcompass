@@ -9,15 +9,16 @@ This guide outlines how to set up and run the project from scratch. The setup in
 
 PASSCOMPASS/
 │
-├── 00_exploration/              # notebooks to get familiar with dataset
+├── _exploration/                 # notebooks to get familiar with dataset
 |                                
-│
+├── .github/worflows              # ci/cd actions
+|
 ├── **flows/**                    # code that Prefect will call
 │   ├── **evidently_pipeline**    # basic monitoring with Evidently
 │   ├── **promotion_pipeline**    # log + register model
 │   └── **training_pipeline**     # train models with experimentation
-│   └── **00_extract_flow.py**    # run to download and treat data
-│   └── **01_train_promote_flow.py**     # run to train model and promote best one
+│   └── **_00_extract_flow.py**    # run to download and treat data
+│   └── **_01_train_promote_flow.py**     # run to train model and promote best one
 │
 ├── **artifacts/**               # where ml stores artifacts locally
 │
@@ -165,7 +166,15 @@ Ps: You can comment out lines of the main function to register a CRON deployment
 
 <img src="./imgs/prefect_train_promote_flow.png" width="50%">
 
-3. Run web application and try a prediction
+3. Evidently flows
+`make evidently-flows`
+
+**Note:**
+- `evidently_create_baseline.py`: This flow (baseline_flow) generates an initial Evidently data drift report using a reference dataset and optionally uploads the report and reference data to Google Cloud Storage.
+
+- `evidently_monitor.py`: This flow (evidently_monitor_flow) loads the latest data batch, compares it against a pre-defined baseline using Evidently to detect data drift, and then saves the drift report (currently only JSON locally, or uploads to GCS).
+
+4. Run web application and try a prediction
 `make webapp-dev`
 
 You can navigate to: `http://127.0.0.1:8000/`
@@ -193,15 +202,10 @@ docker run \
   passcompass:1.0
 ```
 
-🚨 6. Draft Evidently flow simple one
-
-
-
 ------
 
 ### 2.0 Check the services
 
-<div id="unit-tests"></div>
 
 #### Mlflow model registery
 
@@ -215,6 +219,9 @@ From the UI, click in `models` to follow the model registry.
 You can access Prefect locally at `http://127.0.0.1:4200/dashboard`.
 
 ------
+
+
+<div id="unit-tests"></div>
 
 ### 3.0 Unit tests
 Run unit tests anytime with
@@ -288,3 +295,4 @@ docker run \
 
 The image is deployed everytime a new commit passed the tests.
 You might need to updated the location -v of where the artifacts folder exists.
+

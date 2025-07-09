@@ -19,10 +19,14 @@ run-flow:
 	python flows/prefect_flow.py
 
 extract-flow:
-	python flows/00_extract_flow.py
+	python flows/_00_extract_flow.py
 
 train-promote-flow:
-	python flows/01_train_promote_flow.py
+	python flows/_01_train_promote_flow.py
+
+evidently-flow:
+	python flows/evidently_pipelines/evidently_create_baseline.py
+	python flows/evidently_pipelines/evidently_monitor.py
 
 # ---- WEB APP ----
 webapp-dev:
@@ -37,3 +41,11 @@ prefect-ui:
 
 prefect-dash:
 	prefect dashboard
+
+prefect-pool:
+	prefect work-pool create -t process passcompass-pool
+	prefect worker start --pool passcompass-pool
+
+
+
+

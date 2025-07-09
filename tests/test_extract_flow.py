@@ -7,7 +7,7 @@ from pathlib import Path
 
 # ──  Load the task module from its real path ────────────────────────────
 project_root = Path(__file__).resolve().parents[1]  # adjust if tests/ nested deeper
-mod_path = project_root / "flows" / "00_extract_flow.py"
+mod_path = project_root / "flows" / "_00_extract_flow.py"
 
 spec = util.spec_from_file_location("extract_flow", mod_path)
 extract_flow: types.ModuleType = util.module_from_spec(spec)

@@ -11,8 +11,9 @@ from dotenv import load_dotenv
 from evidently import Report
 from evidently.metrics import ValueDrift
 from evidently.presets import DataDriftPreset
-from evidently_create_baseline import upload_to_gcs
 from prefect import flow, task
+
+from .evidently_create_baseline import upload_to_gcs
 
 load_dotenv()
 

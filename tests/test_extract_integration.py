@@ -18,7 +18,7 @@ from pathlib import Path
 
 # ── 1️⃣  Dynamically load flows/00_extract_flow.py ────────────────
 project_root = Path(__file__).resolve().parents[1]
-mod_path = project_root / "flows" / "00_extract_flow.py"
+mod_path = project_root / "flows" / "_00_extract_flow.py"
 
 spec = util.spec_from_file_location("extract_flow", mod_path)
 extract_flow = util.module_from_spec(spec)  # type: ignore
