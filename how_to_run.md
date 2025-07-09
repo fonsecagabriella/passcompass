@@ -12,7 +12,7 @@ PASSCOMPASS/
 ├── 00_exploration/              # notebooks to get familiar with dataset
 |                                
 │
-├── **01_pipelines/**             # code that Prefect will call
+├── **flows/**                    # code that Prefect will call
 │   ├── **evidently_pipeline**    # basic monitoring with Evidently
 │   ├── **promotion_pipeline**    # log + register model
 │   └── **training_pipeline**     # train models with experimentation
@@ -31,9 +31,9 @@ PASSCOMPASS/
 |
 ├── **src/**                     # utils to save different metrics for model comparision
 |
-├── **tests/**                   # a few tests
+├── **tests/**                   # unit and integration tests
 |
-├── **webapp/**                  # flask web application with ui interface for singular prediction
+├── **webapp/**                  # flask web application with ui interface for single prediction
 |
 ├── **Makefile**                 # convenience targets
 ├── **environment.yml**          # include mlflow & prefect
@@ -102,7 +102,7 @@ MODEL_STAGE=Staging
 MLFLOW_EXPERIMENT=passcompass_mlops
 PREFECT__FLOWS__EXECUTION__DEFAULT_GIT_DESTINATION="~/prefect/git-storage" # edit path
 ENVIRONMENT=local # local or gcs
-GCS_BUCKET=gs://passcompass-ml-bucket # edit path
+GCS_BUCKET=passcompass-ml-bucket # edit name - use name only, not path
 GCS_MODEL_URI=gs://passcompass-ml-bucket/model/passcompass_generic_v16 # edit path
 GCS_DATA_URI=gs://passcompass-ml-bucket/data # edit path
 LOCAL_DATA_URI=passcompass/data/passcompass # edit path

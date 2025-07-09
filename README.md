@@ -11,7 +11,6 @@ Each semester, thousands of students silently accumulate risk factors, including
 Build a lightweight, open-source prediction web service that flags students with a high probability of failing a course early in the term, so teachers, counsellors, or mentoring programmes can intervene with targeted support (extra coaching, social-emotional resources, family outreach).
 
 
-
 ### Social relevance
 
 | Angle                     | Why it matters                                                                                                                                                                |
@@ -75,14 +74,13 @@ Collected via questionnaires and school reports at two Portuguese secondary scho
 │  • join courses        │
 │  • engineer target     │
 └────────────┬───────────┘
-             │  Prefect task: preprocess → save students_clean.csv
+             │  Prefect flow: train with experimentation
              ▼
 ┌────────────────────────┐
 │  MLflow Experiment     │
-│  Baseline Pipeline     │
-│  • one-hot / scale     │
-│  • logistic model      │
-│  • 5-fold CV metrics   │
+│  • logistic regression │
+│  • random forest       │
+│  • gbc                 │
 └────────────┬───────────┘
              │  registers best model in MLflow Registry
              ▼
@@ -93,7 +91,7 @@ Collected via questionnaires and school reports at two Portuguese secondary scho
              │  push to GHCR
              ▼
 ┌───────────────────────────────┐
-│  FastAPI Micro-service        │
+│  Flask API                    │
 │  • POST /predict ↦ pass prob  │
 │  • loads model from registry  │
 └────────────┬──────────────────┘
@@ -112,12 +110,13 @@ Collected via questionnaires and school reports at two Portuguese secondary scho
 └───────────────────────────────┘
 ```
 
-Infra notes:
-Terraform (not shown) provisions a small CPU VM + object storage bucket.
+**Infra notes:**
+- Terraform (not shown) provisions a small CPU VM + object storage bucket.
+- CI/CD: GitHub Actions lints, tests, builds the Docker image, and redeploys the FastAPI container on success.
+- Pytests (unit and deployment)
 
-CI/CD: GitHub Actions lints, tests, builds the Docker image, and redeploys the FastAPI container on success.
-
-Scalability: everything is stateless; swap the VM for Kubernetes later without code changes.
+<img src="./imgs/passcompass_diagram_hand.jpeg" width="70%">
+---
 
 ## (For MLOps Zoomcamp classmates) Evaluation criteria
 

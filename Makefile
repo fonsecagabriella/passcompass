@@ -16,13 +16,13 @@ mlflow-ui:
 
 # ====== FLOW ======
 run-flow:
-	python 01_pipelines/prefect_flow.py
+	python flows/prefect_flow.py
 
 extract-flow:
-	python 01_pipelines/00_extract_flow.py
+	python flows/00_extract_flow.py
 
 train-promote-flow:
-	python 01_pipelines/01_train_promote_flow.py
+	python flows/01_train_promote_flow.py
 
 # ---- WEB APP ----
 webapp-dev:

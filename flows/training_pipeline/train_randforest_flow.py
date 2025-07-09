@@ -1,4 +1,4 @@
-# 01_pipelines/training_pipeline/train_rf_flow.py
+# flows/training_pipeline/train_rf_flow.py
 from hyperopt import hp
 from hyperopt.pyll.base import scope
 from prefect import flow

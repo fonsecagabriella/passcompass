@@ -1,4 +1,4 @@
-# 01_pipelines/promotion_pipeline/promote_best_flow.py
+# flows/promotion_pipeline/promote_best_flow.py
 # ─────────────────────────────────────────────────────────────
 # Promote the best MLflow run to STAGING and push its
 # artifacts to Google Cloud Storage in a folder layout that

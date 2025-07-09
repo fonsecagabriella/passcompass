@@ -34,7 +34,7 @@ When you're ready do deploy and/or is something changes on code:
   
 ```bash
 prefect deploy \
-  01_pipelines/training_pipeline/train_logreg_flow.py:train_logreg_flow \
+  flows/training_pipeline/train_logreg_flow.py:train_logreg_flow \
   --name dev --pool default --param acc_min=0.8
 ```
 
@@ -43,7 +43,7 @@ to schedyle a run: `prefect deployment run 'train_logreg_flow/dev'`
 **IF THERE'S CHANGE TO CODE**
 - commit to github
 ```bash
-git add 01_pipelines/training_pipeline/train_utils.py
+git add flows/training_pipeline/train_utils.py
 git commit -m "Fix threshold sweep dtype bug"
 git push origin main
 ```
@@ -55,7 +55,7 @@ git push origin main
 
 # build deployment
 prefect deploy \
-  01_pipelines/promotion_pipeline/promote_best_flow.py:promote_best_model_flow \
+  flows/promotion_pipeline/promote_best_flow.py:promote_best_model_flow \
   --name promote_best --pool default \
   --param experiment=passcompass \
   --param metric=val_macro_avg_f1-score \

@@ -1,4 +1,4 @@
-# 01_pipelines/promotion_pipeline/promote_best_flow.py
+# flows/promotion_pipeline/promote_best_flow.py
 import os
 
 import mlflow

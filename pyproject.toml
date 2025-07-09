@@ -5,7 +5,7 @@ target-version = ["py310"]
 [tool.ruff]                # global settings
 line-length    = 100
 target-version = "py310"
-exclude        = ["00_exploration", "01_pipelines/_archive"]
+exclude        = ["00_exploration"]
 
 # Lint rules: see https://docs.astral.sh/ruff/rules/
 [tool.ruff.lint] 
