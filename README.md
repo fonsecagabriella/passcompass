@@ -4,8 +4,8 @@
 
 Passcompass delivers an end-to-end, monitored pipeline (data ingest → training → deployment → drift alerts) that showcases modern **MLOps practices** and creates a tool that can be adapted by real schools with only spreadsheet-level infrastructure.
 
-- Presented as the final project for [MLops Zoomcamp, 2025](https://github.com/DataTalksClub/mlops-zoomcamp)*
-- For MlOpsZoomcamps evaluators: *I hope you learned as much as I did! 😅 Here you can find the [Criteria list](#-for-mlops-zoomcamp-classmates-evaluation-criteria).
+- Presented as the final project for [MLops Zoomcamp, 2025](https://github.com/DataTalksClub/mlops-zoomcamp).
+- For MlOpsZoomcamps evaluators: *I hope you learned as much as I did!* 😅 Here you can find the [Criteria list](#-for-mlops-zoomcamp-classmates-evaluation-criteria).
 
 
 ## 👀 Problem
