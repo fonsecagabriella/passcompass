@@ -108,7 +108,7 @@ You can follow [detailed instructions here](./how_to_run.md).
 
 **Experiment tracking and model registry**
 - ✅ 4 points: Both experiment tracking and model registry are used
-*You can find instructions [here](./how_to_run.md#mlflow*.
+*You can find instructions [here](./how_to_run.md#mlflow)*.
 
 **Workflow orchestration**
 - ✅ 4 points: Fully deployed workflow
@@ -119,7 +119,8 @@ You can follow [detailed instructions here](./how_to_run.md).
 *The model is containerized. You can check the [dockerfile](./Dockerfile) or more instructions about the model [here](./how_to_run.md#webapp-docker)*
 
 **Model monitoring**
-- 2 points: Basic model monitoring that calculates and reports metrics
+-  ✅ 2 points: Basic model monitoring that calculates and reports metrics
+  *You can see the Evidently flows [here](./how_to_run.md#prefect-flows)*
 
 **Reproducibility**
 - ✅ 4 points: Instructions are clear, it's easy to run the code, and it works. The versions for all the dependencies are specified.
